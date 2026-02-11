@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mesa {{ mesa.numero }} - Menú</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+  <div class="container">
+    <div class="menu-header">
+      <div>
+        <div class="title">🧾 Mesa {{ mesa.numero }}</div>
+        <div class="small">Mesero: {{ current_user.username }}</div>
+      </div>
+
+      <div style="display:flex; gap:10px; align-items:center;">
+        <a class="btn" href="{{ url_for('ver_mesas') }}">↩️ Mesas</a>
+      </div>
+    </div>
+
+    {% if error %}
+      <div class="menu-card" style="border-color: rgba(239,68,68,.4);">
+        <b>⚠️ {{ error }}</b>
+      </div>
+    {% endif %}
+
+    <!-- FORM: enviará producto_{id} = cantidad -->
+    <form id="pedido-form" method="POST">
+      <div class="menu-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+          <div>
+            <b>🍔 Productos</b>
+            <div class="note">Usa + / − para seleccionar</div>
+          </div>
+          <button type="button" id="btn-limpiar" class="btn">🧹 Limpiar</button>
+        </div>
+
+        <div id="lista-productos">
+          {% for p in productos %}
+            <div class="item" data-id="{{ p.id }}" data-precio="{{ p.precio }}">
+              <div>
+                <div class="item-name">{{ p.nombre }}</div>
+                <div class="item-price">{{ p.precio|cop }}</div>
+              </div>
+
+              <div class="qtybox">
+                <button type="button" class="qbtn menos" aria-label="menos">−</button>
+
+                <!-- input real para enviar al backend -->
+                <input
+                  class="qval"
+                  type="text"
+                  inputmode="numeric"
+                  value="0"
+                  readonly
+                  name="producto_{{ p.id }}"
+                />
+
+                <button type="button" class="qbtn mas" aria-label="mas">+</button>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Barra inferior: total + enviar -->
+      <div class="bottom-bar">
+        <div class="menu-card">
+          <div class="summary">
+            <div>
+              <div><b>🛒 Items:</b> <span id="items-count">0</span></div>
+              <div class="small">Total: <b id="total-val">$0</b></div>
+            </div>
+
+            <div style="min-width: 160px;">
+              <button type="submit" id="btn-enviar" class="bigbtn primary" disabled>
+                ✅ Enviar pedido
+              </button>
+              <div class="note" id="hint">Selecciona al menos 1 producto</div>
+            </div>
+          </div>
+
+          <!-- resumen -->
+          <div id="resumen" class="note" style="margin-top:10px;"></div>
+        </div>
+      </div>
+
+    </form>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+</body>
+</html>

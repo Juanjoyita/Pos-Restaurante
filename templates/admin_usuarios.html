@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Usuarios</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 16px; }
+    .topbar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    a.btn, button.btn {
+      border:1px solid #333; background:#eee; padding:10px 12px; border-radius:6px;
+      text-decoration:none; color:#000; cursor:pointer;
+    }
+    table { width:100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border-bottom:1px solid #eee; padding:10px; text-align:left; }
+    th { background:#fafafa; }
+    .right { text-align:right; }
+    .badge { font-size:12px; padding:4px 8px; border:1px solid #ccc; border-radius:999px; background:#f7f7f7; }
+    .off { opacity: 0.55; }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <h1 style="margin:0;">👥 Usuarios</h1>
+    <a class="btn" href="{{ url_for('admin_panel') }}">↩️ Volver</a>
+    <a class="btn" href="{{ url_for('admin_usuario_nuevo') }}">➕ Nuevo mesero</a>
+    <a class="btn" href="{{ url_for('logout') }}">Cerrar sesión</a>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Usuario</th>
+        <th>Rol</th>
+        <th>Estado</th>
+        <th class="right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in usuarios %}
+      <tr class="{% if u.role|lower == 'mesero' and not u.activo %}off{% endif %}">
+        <td><b>{{ u.username }}</b></td>
+        <td><span class="badge">{{ u.role }}</span></td>
+        <td>
+          {% if u.role|lower == "mesero" %}
+            {% if u.activo %}✅ Activo{% else %}⛔ Desactivado{% endif %}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td class="right">
+          {% if u.role|lower == "mesero" %}
+            <form method="POST" action="{{ url_for('admin_usuario_toggle', user_id=u.id) }}" style="display:inline;">
+              <button class="btn" type="submit">
+                {% if u.activo %}⛔ Desactivar{% else %}✅ Activar{% endif %}
+              </button>
+            </form>
+
+            <form method="POST" action="{{ url_for('admin_usuario_eliminar', user_id=u.id) }}" style="display:inline;">
+              <button class="btn" type="submit" onclick="return confirm('¿Eliminar mesero {{ u.username }}? (si tiene pedidos se desactivará)');">
+                🗑️ Borrar
+              </button>
+            </form>
+          {% else %}
+            <span style="color:#666; font-size:12px;">No editable</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+</body>
+</html>

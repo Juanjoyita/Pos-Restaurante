@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pedidos - Admin</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 16px; }
+    .pedido { border:1px solid #ccc; padding:10px; margin-bottom:10px; border-radius:10px; }
+    .pedido-nuevo { border-color:#2ecc71; background:#ecfdf3; }
+    .topbar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .btn { padding:10px 12px; border:1px solid #333; background:#eee; cursor:pointer; border-radius:8px; }
+    a.btn { text-decoration:none; color:#000; display:inline-block; }
+    .total { font-weight:bold; margin-top:8px; }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <h2 style="margin:0;">🧾 Pedidos abiertos (tiempo real)</h2>
+    <a class="btn" href="{{ url_for('admin_panel') }}">↩️ Volver</a>
+    <button class="btn" id="btn-sonido">🔔 Activar sonido</button>
+    <span id="estado-sonido">Sonido: OFF</span>
+  </div>
+
+  <div id="pedidos-container" style="margin-top:12px;">
+    <p>Cargando pedidos…</p>
+  </div>
+
+  <script>
+    let sonidoActivado = false;
+    let pedidosMostrados = new Set();
+
+    function beep() {
+      if (!sonidoActivado) return;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.connect(g); g.connect(ctx.destination);
+        o.type = "sine";
+        o.frequency.value = 880;
+        g.gain.value = 0.05;
+        o.start();
+        setTimeout(() => { o.stop(); ctx.close(); }, 180);
+      } catch (e) {}
+    }
+
+    document.getElementById("btn-sonido").addEventListener("click", () => {
+      sonidoActivado = true;
+      document.getElementById("estado-sonido").textContent = "Sonido: ON";
+      beep();
+    });
+
+    function formatoDinero(n) {
+      return "$" + Math.round(n).toLocaleString("es-CO");
+    }
+
+    async function cargarPedidos() {
+      const res = await fetch("/admin/pedidos.json", { cache: "no-store" });
+      if (!res.ok) return;
+
+      const data = await res.json();
+      const cont = document.getElementById("pedidos-container");
+      const pedidos = data.pedidos || [];
+
+      if (pedidos.length === 0) {
+        cont.innerHTML = "<p>No hay pedidos abiertos.</p>";
+        pedidosMostrados.clear();
+        return;
+      }
+
+      // sonar si hay uno nuevo
+      let hayNuevo = false;
+      for (const p of pedidos) {
+        if (!pedidosMostrados.has(p.id)) hayNuevo = true;
+      }
+      if (hayNuevo) beep();
+
+      cont.innerHTML = pedidos.map(p => {
+        const esNuevo = !pedidosMostrados.has(p.id);
+        pedidosMostrados.add(p.id);
+
+        const itemsHtml = (p.detalles || []).map(d => `
+          <li>${d.nombre} x ${d.cantidad} — ${formatoDinero(d.precio)} c/u — <b>${formatoDinero(d.subtotal)}</b></li>
+        `).join("");
+
+        const hora = (p.fecha || "").slice(11,16); // HH:MM del ISO
+
+        return `
+          <div class="pedido ${esNuevo ? "pedido-nuevo" : ""}">
+            <p><b>Pedido #${p.id}</b> | Mesa <b>${p.mesa}</b> | Mesero <b>${p.mesero}</b> | ${hora}</p>
+            <ul>${itemsHtml}</ul>
+            <div class="total">TOTAL: ${formatoDinero(p.total || 0)}</div>
+
+            <form method="POST" action="/admin/pedido/${p.id}/cerrar" style="margin-top:10px;">
+              <button class="btn" type="submit">Cerrar pedido (liberar mesa)</button>
+              <a class="btn" href="/admin/factura/${p.id}?print=1">🧾 Factura</a>
+            </form>
+          </div>
+        `;
+      }).join("");
+    }
+
+    cargarPedidos();
+    setInterval(cargarPedidos, 2500);
+  </script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin - Panel</title>
+  <style>
+    body{font-family:Arial,sans-serif; padding:16px; background:#0b1220; color:#e8eefc;}
+    a{color:#e8eefc; text-decoration:none;}
+    .top{display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between;}
+    .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-top:14px;}
+    .card{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+      border-radius:16px;
+      padding:14px;
+    }
+    .card h3{margin:0 0 8px 0; font-size:16px;}
+    .metric{font-size:26px; font-weight:900;}
+    .muted{color:rgba(232,238,252,.7); font-size:12px;}
+    .btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
+    .btn{
+      display:inline-block;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      cursor:pointer;
+      font-weight:700;
+    }
+    .btn.primary{border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.12);}
+    .btn.warn{border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.12);}
+    .btn.blue{border-color: rgba(59,130,246,.35); background: rgba(59,130,246,.12);}
+    .btn.red{border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10);}
+    hr{border:none; border-top:1px solid rgba(255,255,255,.12); margin:18px 0;}
+    .list .item{padding:10px 0; border-top:1px solid rgba(255,255,255,.10);}
+    .list .item:first-child{border-top:none;}
+    .pill{display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px; border:1px solid rgba(255,255,255,.14);}
+  </style>
+</head>
+<body>
+
+  <div class="top">
+    <div>
+      <h1 style="margin:0;">Panel Admin 🧑‍💼</h1>
+      <div class="muted">Bienvenido, {{ current_user.username }}</div>
+    </div>
+
+    <div class="btnrow">
+      <a class="btn red" href="{{ url_for('logout') }}">🚪 Cerrar sesión</a>
+    </div>
+  </div>
+
+  <!-- Accesos rápidos -->
+  <!-- ACCESOS RÁPIDOS -->
+<section style="margin-top:16px;">
+  <h2 style="margin:0 0 10px 0;">⚡ Accesos rápidos</h2>
+
+  <div class="grid">
+    <div class="card">
+      <h3>🧾 Pedidos abiertos</h3>
+      <div class="metric">{{ pedidos_abiertos_count }}</div>
+      <div class="muted">Actualiza en tiempo real en el panel de pedidos</div>
+      <div class="btnrow">
+        <a class="btn primary" href="{{ url_for('admin_pedidos') }}">Ver pedidos</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>📦 Productos activos</h3>
+      <div class="metric">{{ productos_activos_count }}</div>
+      <div class="muted">Total productos: {{ productos_total_count }}</div>
+      <div class="btnrow">
+        <a class="btn blue" href="{{ url_for('admin_productos') }}">Gestionar productos</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>👥 Meseros activos</h3>
+      <div class="metric">{{ meseros_activos_count }}</div>
+      <div class="muted">Crea / desactiva usuarios</div>
+      <div class="btnrow">
+        <a class="btn warn" href="{{ url_for('admin_usuarios') }}">Gestionar usuarios</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>💰 Caja</h3>
+      <div class="muted">Reportes por fechas</div>
+      <div class="btnrow">
+        <a class="btn blue" href="{{ url_for('caja_dia') }}">📊 Abrir caja</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr style="margin:24px 0;">
+
+
+  <!-- Últimos pedidos cerrados -->
+  <div class="card">
+    <h3 style="margin:0 0 10px 0;">🕘 Últimos pedidos cerrados</h3>
+
+    {% if pedidos_cerrados|length == 0 %}
+      <div class="muted">Aún no hay pedidos cerrados.</div>
+    {% else %}
+      <div class="list">
+        {% for p in pedidos_cerrados %}
+          <div class="item">
+            <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+              <div>
+                <b>Pedido #{{ p.id }}</b>
+                <span class="pill">Mesa {{ p.mesa.numero }}</span>
+                <span class="pill">Mesero {{ p.mesero.username }}</span>
+              </div>
+              <div class="muted">
+                {{ p.fecha.strftime("%Y-%m-%d %H:%M") if p.fecha else "" }}
+              </div>
+            </div>
+
+            <div class="btnrow" style="margin-top:8px;">
+              <a class="btn" href="{{ url_for('ver_factura', pedido_id=p.id) }}">🧾 Ver factura</a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+</body>
+</html>

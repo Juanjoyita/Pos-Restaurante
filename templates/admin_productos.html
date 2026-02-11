@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin - Productos</title>
+  <style>
+    body{font-family:Arial,sans-serif; padding:16px;}
+    .top{display:flex; gap:12px; align-items:center; flex-wrap:wrap;}
+    table{width:100%; border-collapse:collapse; margin-top:14px;}
+    th,td{border:1px solid #ddd; padding:10px; text-align:left;}
+    th{background:#f4f4f4;}
+    .badge{padding:4px 10px; border-radius:999px; font-size:12px; display:inline-block;}
+    .on{background:#e8fff0; color:#126b2f; border:1px solid #b9f5cd;}
+    .off{background:#fff0f0; color:#8a1c1c; border:1px solid #ffd0d0;}
+    .btn{padding:8px 10px; border:1px solid #333; background:#eee; cursor:pointer; border-radius:6px;}
+    a.btn{text-decoration:none; color:#000; display:inline-block;}
+    .row-actions{display:flex; gap:8px; flex-wrap:wrap;}
+    input{padding:8px; border-radius:6px; border:1px solid #ccc;}
+  </style>
+</head>
+<body>
+
+  <div class="top">
+    <h2 style="margin:0;">📦 Productos</h2>
+    <a class="btn" href="{{ url_for('admin_panel') }}">↩️ Volver</a>
+    <a class="btn" href="{{ url_for('admin_producto_nuevo') }}">➕ Nuevo producto</a>
+
+    <form method="GET" action="{{ url_for('admin_productos') }}" style="display:flex; gap:8px; align-items:center;">
+      <input type="text" name="q" value="{{ q }}" placeholder="Buscar producto..." />
+      <button class="btn" type="submit">Buscar</button>
+    </form>
+  </div>
+
+  {% if productos|length == 0 %}
+    <p style="margin-top:16px;">No hay productos.</p>
+  {% else %}
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Precio</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in productos %}
+          <tr>
+            <td><b>{{ p.nombre }}</b></td>
+            <td>${{ p.precio|round|int }}</td>
+            <td>
+              {% if p.activo %}
+                <span class="badge on">Disponible</span>
+              {% else %}
+                <span class="badge off">No disponible</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="row-actions">
+                <a class="btn" href="{{ url_for('admin_producto_editar', producto_id=p.id) }}">✏️ Editar</a>
+
+                <form method="POST" action="{{ url_for('admin_producto_toggle', producto_id=p.id) }}">
+                  {% if p.activo %}
+                    <button class="btn" type="submit">🚫 Desactivar</button>
+                  {% else %}
+                    <button class="btn" type="submit">✅ Activar</button>
+                  {% endif %}
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nuevo mesero</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 16px; }
+    .card { border:1px solid #ddd; padding: 16px; border-radius: 8px; max-width: 420px; }
+    label { display:block; margin-top: 10px; font-weight: bold; }
+    input { width:100%; padding:10px 12px; border-radius:6px; border:1px solid #ccc; margin-top: 6px; }
+    .row { display:flex; gap:10px; margin-top: 12px; }
+    a.btn, button.btn {
+      border:1px solid #333; background:#eee; padding:10px 12px; border-radius:6px;
+      text-decoration:none; color:#000; cursor:pointer;
+    }
+    .error { color:#b00020; font-weight:bold; margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+  <a class="btn" href="{{ url_for('admin_usuarios') }}">↩️ Volver</a>
+  <h1>➕ Crear mesero</h1>
+
+  <div class="card">
+    {% if error %}
+      <div class="error">❌ {{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+      <label>Usuario</label>
+      <input name="username" placeholder="ej: mesero2" required>
+
+      <label>Contraseña</label>
+      <input name="password" type="password" placeholder="mínimo 6 caracteres" required>
+
+      <div class="row">
+        <button class="btn" type="submit">✅ Crear</button>
+        <a class="btn" href="{{ url_for('admin_usuarios') }}">Cancelar</a>
+      </div>
+    </form>
+  </div>
+
+</body>
+</html>

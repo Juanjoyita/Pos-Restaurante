@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mesas</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+  <div class="container">
+    <div class="topbar">
+      <div>
+        <div class="title">👨‍🍳 Mesero: {{ current_user.username }}</div>
+        <div class="small">Selecciona una mesa para tomar el pedido</div>
+      </div>
+
+      <div style="display:flex; gap:10px; align-items:center;">
+        <span class="badge">Actualiza cada 2.5s</span>
+        <a class="btn" href="{{ url_for('logout') }}">Salir</a>
+      </div>
+    </div>
+
+    <div id="grid-mesas" class="grid">
+      <!-- JS lo rellena con /mesas.json -->
+      <div class="card">
+        <div class="num">Cargando…</div>
+        <div class="meta">
+          <span class="pill libre"><span class="dot"></span>Libre</span>
+          <span class="small">…</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast">Actualizando…</div>
+
+  <script src="{{ url_for('static', filename='js/mesas.js') }}"></script>
+</body>
+</html>

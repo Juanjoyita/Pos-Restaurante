@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Factura #{{ pedido.id }}</title>
+
+  <style>
+    /* --- Ticket 80mm --- */
+    @page {
+      size: 80mm auto;
+      margin: 6mm;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      margin: 0;
+      padding: 0;
+      color: #000;
+    }
+
+    .ticket {
+      width: 80mm;
+      margin: 0 auto;
+    }
+
+    .center { text-align: center; }
+    .right { text-align: right; }
+    .bold { font-weight: bold; }
+
+    .line {
+      border-top: 1px dashed #000;
+      margin: 8px 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    td {
+      padding: 2px 0;
+      vertical-align: top;
+    }
+
+    .qty { width: 18mm; }
+    .subtotal { width: 22mm; }
+
+    .actions {
+      margin: 10px 0;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 10px 12px;
+      cursor: pointer;
+      border: 1px solid #333;
+      background: #eee;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    a.btn {
+      text-decoration: none;
+      color: #000;
+      display: inline-block;
+    }
+
+    .msg-error {
+      width: 100%;
+      text-align: center;
+      font-weight: bold;
+      color: #b00020;
+      margin-top: 6px;
+    }
+
+    .msg-ok {
+      width: 100%;
+      text-align: center;
+      font-weight: bold;
+      margin-top: 6px;
+    }
+
+    /* --- Al imprimir: ocultar botones --- */
+    @media print {
+      .actions { display: none; }
+      .msg-error, .msg-ok { display: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="ticket">
+    <div class="center">
+      <div class="bold" style="font-size: 14px;">RANCHO 27</div>
+      <div>NIT: 000000000</div>
+      <div>Dirección: Kilometro 27</div>
+      <div>Tel: 3225935689</div>
+    </div>
+
+    <div class="line"></div>
+
+    <div>
+      <div><span class="bold">Factura:</span> #{{ pedido.id }}</div>
+      <div><span class="bold">Mesa:</span> {{ pedido.mesa.numero }}</div>
+      <div><span class="bold">Mesero:</span> {{ pedido.mesero.username }}</div>
+      <div><span class="bold">Hora:</span> {{ pedido.fecha|hora_bogota }}</div>
+    </div>
+
+    <div class="line"></div>
+
+    <table>
+      <tbody>
+        {% for it in items %}
+          <tr>
+            <td class="qty">{{ it.cantidad }}x</td>
+            <td>{{ it.nombre }}</td>
+            <td class="right subtotal">{{ it.subtotal|cop }}</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td style="font-size: 11px; color: #111;">
+              ({{ it.precio|cop }} c/u)
+            </td>
+            <td></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="line"></div>
+
+    <div class="right bold" style="font-size: 14px;">
+      TOTAL: {{ total|cop }}
+    </div>
+
+    <div class="line"></div>
+
+    <div class="center">
+      <div>¡Gracias por tu visita! 🙌</div>
+      <div style="font-size: 11px;">Vuelve pronto</div>
+    </div>
+
+    <!-- ✅ MENSAJES DE ERROR (Paso 5) -->
+    {% if error == "pago_insuficiente" %}
+      <div class="msg-error">❌ El efectivo recibido no alcanza el total.</div>
+    {% elif error == "metodo_invalido" %}
+      <div class="msg-error">❌ Selecciona un método de pago válido.</div>
+    {% endif %}
+
+    <div class="actions">
+
+      <!-- ✅ FORMULARIO DE PAGO (Paso 5) -->
+      {% if pedido.estado != "cerrado" %}
+        <form method="POST"
+              action="{{ url_for('cobrar_pedido', pedido_id=pedido.id) }}"
+              style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; width:100%;">
+
+          <select class="btn" name="metodo_pago" id="metodo_pago" required>
+            <option value="">Método de pago</option>
+            <option value="efectivo">Efectivo</option>
+            <option value="transferencia">Transferencia</option>
+            <option value="tarjeta">Tarjeta</option>
+          </select>
+
+          <input class="btn"
+                 type="number"
+                 name="monto_recibido"
+                 id="monto_recibido"
+                 placeholder="Recibido (solo efectivo)"
+                 step="0.01"
+                 style="display:none;">
+
+          <button class="btn" type="submit">💳 Cobrar e imprimir</button>
+        </form>
+      {% else %}
+        <!-- ✅ Si ya está cerrado, mostrar info de pago -->
+        <div class="msg-ok">
+          ✅ Pedido pagado
+          {% if pedido.metodo_pago %}
+            ({{ pedido.metodo_pago }})
+          {% endif %}
+          {% if pedido.cambio is not none and pedido.metodo_pago == "efectivo" %}
+            | Cambio: {{ pedido.cambio|cop }}
+          {% endif %}
+        </div>
+      {% endif %}
+
+      <!-- Botones extra -->
+      <button class="btn" type="button" onclick="window.print()">🖨️ Imprimir</button>
+      <a class="btn" href="{{ url_for('admin_panel') }}">↩️ Volver</a>
+    </div>
+  </div>
+
+  <!-- ✅ JS: mostrar input "recibido" solo si es efectivo (Paso 5) -->
+  <script>
+    const metodo = document.getElementById("metodo_pago");
+    const recibido = document.getElementById("monto_recibido");
+
+    if (metodo && recibido) {
+      metodo.addEventListener("change", () => {
+        if (metodo.value === "efectivo") {
+          recibido.style.display = "inline-block";
+          recibido.required = true;
+        } else {
+          recibido.style.display = "none";
+          recibido.required = false;
+          recibido.value = "";
+        }
+      });
+    }
+  </script>
+
+  <!-- ✅ Auto print si vienes desde ?print=1 -->
+  {% if auto_print %}
+  <script>
+    window.onload = () => {
+      window.print();
+    };
+  </script>
+  {% endif %}
+
+</body>
+</html>

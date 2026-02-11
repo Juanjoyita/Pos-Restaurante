@@ -1,0 +1,237 @@
+:root{
+  --bg:#0b1220;
+  --card:#0f1b31;
+  --text:#e8eefc;
+  --muted:#9fb0d0;
+  --ok:#22c55e;
+  --bad:#ef4444;
+  --warn:#f59e0b;
+  --line:rgba(255,255,255,.08);
+}
+
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: radial-gradient(1200px 600px at 20% 0%, #13264a 0%, var(--bg) 55%);
+  color:var(--text);
+}
+
+.container{
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom: 14px;
+}
+
+.title{
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing:.2px;
+}
+
+.badge{
+  font-size:12px;
+  color:var(--muted);
+  border:1px solid var(--line);
+  padding:6px 10px;
+  border-radius:999px;
+}
+
+.btn{
+  border:1px solid var(--line);
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 12px;
+  cursor:pointer;
+  text-decoration:none;
+  font-weight:700;
+}
+
+.btn:active{ transform: scale(.99); }
+
+.grid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (min-width: 560px){
+  .grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 860px){
+  .grid{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.card{
+  border:1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+  border-radius: 18px;
+  padding: 14px;
+  min-height: 104px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+
+.card a{
+  text-decoration:none;
+  color:inherit;
+}
+
+.card .num{
+  font-size: 28px;
+  font-weight: 900;
+}
+
+.card .meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-top: 8px;
+}
+
+.pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border:1px solid var(--line);
+}
+
+.dot{
+  width:10px; height:10px;
+  border-radius:999px;
+  background: var(--muted);
+}
+
+.pill.libre .dot{ background: var(--ok); }
+.pill.ocupada .dot{ background: var(--warn); }
+
+.small{
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.toast{
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,.55);
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  color: var(--text);
+  opacity: 0;
+  pointer-events:none;
+  transition: .2s ease;
+}
+.toast.show{ opacity: 1; }
+
+/* --- MENU MESERO --- */
+.menu-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom: 12px;
+}
+
+.menu-card{
+  border:1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+  border-radius: 18px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.item{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+.item:first-child{ border-top:none; }
+
+.item-name{ font-weight: 900; }
+.item-price{ color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+.qtybox{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.qbtn{
+  width:42px;
+  height:42px;
+  border-radius: 14px;
+  border:1px solid var(--line);
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  font-weight: 900;
+  font-size: 18px;
+  cursor:pointer;
+}
+.qval{
+  width:44px;
+  text-align:center;
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.bottom-bar{
+  position: sticky;
+  bottom: 10px;
+  z-index: 50;
+}
+
+.summary{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+}
+
+.bigbtn{
+  width: 100%;
+  padding: 14px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: rgba(255,255,255,.10);
+  color: var(--text);
+  font-weight: 900;
+  cursor:pointer;
+}
+
+.bigbtn.primary{
+  background: linear-gradient(180deg, rgba(34,197,94,.28), rgba(34,197,94,.12));
+  border-color: rgba(34,197,94,.35);
+}
+
+.bigbtn.danger{
+  background: linear-gradient(180deg, rgba(239,68,68,.25), rgba(239,68,68,.10));
+  border-color: rgba(239,68,68,.35);
+}
+
+.note{
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.hidden{ display:none !important; }

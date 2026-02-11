@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Caja - {{ dia }}</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 16px; }
+    .topbar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .card { border:1px solid #ddd; padding:12px; border-radius:8px; margin:10px 0; }
+    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px; }
+    table { width:100%; border-collapse: collapse; margin-top: 8px; }
+    th, td { border-bottom: 1px solid #eee; padding: 8px; text-align:left; }
+    th { background:#fafafa; }
+    .right { text-align:right; }
+    .muted { color:#666; font-size: 12px; }
+    a.btn, button.btn {
+      border:1px solid #333; background:#eee; padding:10px 12px; border-radius:6px;
+      text-decoration:none; color:#000; cursor:pointer;
+    }
+    input { padding:10px 12px; border-radius:6px; border:1px solid #ccc; }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <h1 style="margin:0;">📊 Caja del día</h1>
+    <a class="btn" href="{{ url_for('admin_panel') }}">↩️ Volver</a>
+    <a class="btn" href="{{ url_for('logout') }}">Cerrar sesión</a>
+
+    <form method="GET" action="{{ url_for('caja_dia') }}" style="display:flex; gap:8px; align-items:center;">
+  <label class="muted">Fecha:</label>
+
+  <select name="fecha" style="padding:10px 12px; border-radius:6px; border:1px solid #ccc;">
+    {% for f in fechas_disponibles %}
+      <option value="{{ f }}" {% if f == dia|string %}selected{% endif %}>
+        {{ f }}
+      </option>
+    {% endfor %}
+  </select>
+
+  <button class="btn" type="submit">Ver</button>
+</form>
+
+  </div>
+
+  <div class="card grid">
+    <div>
+      <div class="muted">Fecha</div>
+      <div><b>{{ dia }}</b></div>
+    </div>
+    <div>
+      <div class="muted">Total vendido</div>
+      <div><b>{{ total_dia|cop }}</b></div>
+    </div>
+    <div>
+      <div class="muted">Pedidos cobrados</div>
+      <div><b>{{ conteo }}</b></div>
+    </div>
+    <div>
+      <div class="muted">Ticket promedio</div>
+      <div><b>{{ ticket_promedio|cop }}</b></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0;">💳 Ventas por método de pago</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Método</th>
+          <th class="right">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Efectivo</td><td class="right">{{ por_metodo["efectivo"]|cop }}</td></tr>
+        <tr><td>Transferencia</td><td class="right">{{ por_metodo["transferencia"]|cop }}</td></tr>
+        <tr><td>Tarjeta</td><td class="right">{{ por_metodo["tarjeta"]|cop }}</td></tr>
+        <tr><td>Otro</td><td class="right">{{ por_metodo["otro"]|cop }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0;">🧾 Pedidos cobrados ({{ dia }})</h2>
+    {% if pedidos_info|length == 0 %}
+      <p>No hay pedidos cobrados en esta fecha.</p>
+    {% else %}
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Mesa</th>
+            <th>Hora</th>
+            <th>Método</th>
+            <th class="right">Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in pedidos_info %}
+          <tr>
+            <td>#{{ p.id }}</td>
+            <td>{{ p.mesa }}</td>
+            <td>{{ p.hora }}</td>
+            <td>{{ p.metodo }}</td>
+            <td class="right">{{ p.total|cop }}</td>
+            <td><a class="btn" href="{{ url_for('ver_factura', pedido_id=p.id) }}">Ver</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0;">🔥 Top productos (por ventas)</h2>
+    {% if top_lista|length == 0 %}
+      <p>No hay productos (aún).</p>
+    {% else %}
+      <table>
+        <thead>
+          <tr>
+            <th>Producto</th>
+            <th class="right">Cantidad</th>
+            <th class="right">Ventas</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in top_lista %}
+          <tr>
+            <td>{{ t.nombre }}</td>
+            <td class="right">{{ t.cantidad }}</td>
+            <td class="right">{{ t.ventas|cop }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+
+</body>
+</html>

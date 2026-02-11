@@ -21,9 +21,12 @@ load_dotenv()
 app = Flask(__name__)
 
 # ---------- CONFIGURACIÓN ----------
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret")
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db_url = os.getenv("DATABASE_URL")  # Render la pone
+if db_url and db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = db_url or "sqlite:///database.db"
+
 
 # ---------- INICIALIZAR EXTENSIONES ----------
 db.init_app(app)

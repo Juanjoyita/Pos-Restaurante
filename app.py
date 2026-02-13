@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 from zoneinfo import ZoneInfo
 from datetime import datetime, date, time
+
 from sqlalchemy import func
 
 from flask_login import (
@@ -21,14 +22,9 @@ load_dotenv()
 app = Flask(__name__)
 
 # ---------- CONFIGURACIÓN ----------
-# ✅ En Render NO existe tu .env (a menos que lo copies), allá se usan Environment Variables.
-# ✅ SECRET_KEY debe venir de Render o usa fallback local.
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret")
 
-# ✅ Postgres en Render: DATABASE_URL
 db_url = os.getenv("DATABASE_URL", "sqlite:///database.db")
-
-# Render a veces entrega postgres:// y SQLAlchemy necesita postgresql://
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
@@ -42,10 +38,35 @@ cors.init_app(app)
 
 login_manager.login_view = "login"
 
-# ✅ IMPORTANTÍSIMO: en Render la app no entra al __main__.
-# Por eso creamos tablas aquí al iniciar.
+# ---------- ZONAS HORARIAS ----------
+UTC = ZoneInfo("UTC")
+BOG = ZoneInfo("America/Bogota")
+
+def to_bogota(dt: datetime) -> datetime:
+    """
+    Convierte cualquier datetime a Bogotá.
+    Si viene naive (sin tzinfo), asumimos UTC (Render / Postgres típico).
+    """
+    if not dt:
+        return dt
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(BOG)
+
+def bogota_day_to_utc_range(d: date):
+    """
+    Toma un día calendario en Bogotá y devuelve (inicio_utc_naive, fin_utc_naive)
+    para comparar contra datetimes guardados en UTC naive en la DB.
+    """
+    inicio_bog = datetime.combine(d, time.min).replace(tzinfo=BOG)
+    fin_bog = datetime.combine(d, time.max).replace(tzinfo=BOG)
+
+    inicio_utc = inicio_bog.astimezone(UTC).replace(tzinfo=None)
+    fin_utc = fin_bog.astimezone(UTC).replace(tzinfo=None)
+    return inicio_utc, fin_utc
+
+# ---------- SEED USERS (Render no entra a __main__) ----------
 def seed_users():
-    # crea admin y mesero solo si no existen
     if not User.query.filter_by(username="admin").first():
         admin = User(username="admin", role="admin", activo=True)
         admin.set_password(os.getenv("ADMIN_PASSWORD", "admin123"))
@@ -58,8 +79,6 @@ def seed_users():
 
     db.session.commit()
 
-
-
 with app.app_context():
     db.create_all()
     seed_users()
@@ -70,10 +89,9 @@ def hora_bogota(dt):
     if not dt:
         return ""
     try:
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=ZoneInfo("America/Bogota"))
-        return dt.astimezone(ZoneInfo("America/Bogota")).strftime("%H:%M")
+        return to_bogota(dt).strftime("%H:%M")
     except Exception:
+        # fallback
         return dt.strftime("%H:%M")
 
 # ---------- FILTRO COP ----------
@@ -121,7 +139,6 @@ def login():
             error = "Usuario o contraseña incorrectos."
 
     return render_template("login.html", error=error)
-
 
 @app.route("/logout")
 @login_required
@@ -230,7 +247,7 @@ def admin_panel():
     pedidos_cerrados = (
         Pedido.query
         .filter_by(estado="cerrado")
-        .order_by(Pedido.fecha.desc())
+        .order_by(Pedido.fecha_cierre.desc())
         .limit(20)
         .all()
     )
@@ -335,7 +352,6 @@ def caja_dia():
         .order_by(func.date(Pedido.fecha_cierre).desc())
         .all()
     )
-
     fechas_disponibles = [str(r[0]) for r in fechas_rows if r[0] is not None]
 
     fecha_str = request.args.get("fecha", "").strip()
@@ -344,16 +360,16 @@ def caja_dia():
     else:
         dia = datetime.strptime(fechas_disponibles[0], "%Y-%m-%d").date() if fechas_disponibles else date.today()
 
-    inicio = datetime.combine(dia, time.min)
-    fin = datetime.combine(dia, time.max)
+    # ✅ rango del día en Bogotá -> convertido a UTC para consultar DB (UTC)
+    inicio_utc, fin_utc = bogota_day_to_utc_range(dia)
 
     pedidos = (
         Pedido.query
         .filter(
             Pedido.estado == "cerrado",
             Pedido.fecha_cierre.isnot(None),
-            Pedido.fecha_cierre >= inicio,
-            Pedido.fecha_cierre <= fin
+            Pedido.fecha_cierre >= inicio_utc,
+            Pedido.fecha_cierre <= fin_utc
         )
         .order_by(Pedido.fecha_cierre.desc())
         .all()
@@ -384,10 +400,13 @@ def caja_dia():
             metodo = "otro"
         por_metodo[metodo] += total_pedido
 
+        # ✅ hora bien en Bogotá
+        hora_ok = to_bogota(p.fecha_cierre).strftime("%H:%M") if p.fecha_cierre else ""
+
         pedidos_info.append({
             "id": p.id,
             "mesa": p.mesa.numero,
-            "hora": p.fecha_cierre.strftime("%H:%M") if p.fecha_cierre else "",
+            "hora": hora_ok,
             "metodo": (p.metodo_pago or "otro"),
             "total": total_pedido,
         })
@@ -436,7 +455,16 @@ def ver_factura(pedido_id):
         })
 
     auto_print = request.args.get("print") == "1"
-    return render_template("factura.html", pedido=pedido, items=items, total=total, auto_print=auto_print)
+    error = request.args.get("error")
+
+    return render_template(
+        "factura.html",
+        pedido=pedido,
+        items=items,
+        total=total,
+        auto_print=auto_print,
+        error=error
+    )
 
 # ---------- ADMIN: PEDIDOS JSON ----------
 @app.route("/admin/pedidos.json")
@@ -540,7 +568,9 @@ def cobrar_pedido(pedido_id):
     pedido.metodo_pago = metodo_pago
     pedido.monto_recibido = monto_recibido
     pedido.cambio = cambio
-    pedido.fecha_cierre = datetime.now()
+
+    # ✅ CLAVE: guardar en UTC (Render)
+    pedido.fecha_cierre = datetime.utcnow()
 
     mesa = db.session.get(Mesa, pedido.mesa_id)
     if mesa:

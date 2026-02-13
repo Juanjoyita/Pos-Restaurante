@@ -108,7 +108,9 @@
       <div><span class="bold">Factura:</span> #{{ pedido.id }}</div>
       <div><span class="bold">Mesa:</span> {{ pedido.mesa.numero }}</div>
       <div><span class="bold">Mesero:</span> {{ pedido.mesero.username }}</div>
-      <div><span class="bold">Hora:</span> {{ pedido.fecha|hora_bogota }}</div>
+
+      <!-- ✅ HORA CORRECTA: primero fecha_cierre (si ya pagó), si no, fecha -->
+      <div><span class="bold">Hora:</span> {{ (pedido.fecha_cierre or pedido.fecha)|hora_bogota }}</div>
     </div>
 
     <div class="line"></div>
@@ -145,7 +147,7 @@
       <div style="font-size: 11px;">Vuelve pronto</div>
     </div>
 
-    <!-- ✅ MENSAJES DE ERROR (Paso 5) -->
+    <!-- ✅ MENSAJES DE ERROR -->
     {% if error == "pago_insuficiente" %}
       <div class="msg-error">❌ El efectivo recibido no alcanza el total.</div>
     {% elif error == "metodo_invalido" %}
@@ -154,7 +156,6 @@
 
     <div class="actions">
 
-      <!-- ✅ FORMULARIO DE PAGO (Paso 5) -->
       {% if pedido.estado != "cerrado" %}
         <form method="POST"
               action="{{ url_for('cobrar_pedido', pedido_id=pedido.id) }}"
@@ -178,7 +179,6 @@
           <button class="btn" type="submit">💳 Cobrar e imprimir</button>
         </form>
       {% else %}
-        <!-- ✅ Si ya está cerrado, mostrar info de pago -->
         <div class="msg-ok">
           ✅ Pedido pagado
           {% if pedido.metodo_pago %}
@@ -190,13 +190,11 @@
         </div>
       {% endif %}
 
-      <!-- Botones extra -->
       <button class="btn" type="button" onclick="window.print()">🖨️ Imprimir</button>
       <a class="btn" href="{{ url_for('admin_panel') }}">↩️ Volver</a>
     </div>
   </div>
 
-  <!-- ✅ JS: mostrar input "recibido" solo si es efectivo (Paso 5) -->
   <script>
     const metodo = document.getElementById("metodo_pago");
     const recibido = document.getElementById("monto_recibido");
@@ -215,7 +213,6 @@
     }
   </script>
 
-  <!-- ✅ Auto print si vienes desde ?print=1 -->
   {% if auto_print %}
   <script>
     window.onload = () => {

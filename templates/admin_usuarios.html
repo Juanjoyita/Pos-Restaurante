@@ -3,73 +3,292 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Usuarios</title>
+  <title>Usuarios - Rancho27</title>
+
   <style>
-    body { font-family: Arial, sans-serif; padding: 16px; }
-    .topbar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-    a.btn, button.btn {
-      border:1px solid #333; background:#eee; padding:10px 12px; border-radius:6px;
-      text-decoration:none; color:#000; cursor:pointer;
+    :root{
+      --bg:#0b1220;
+      --card: rgba(255,255,255,.04);
+      --card2: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.12);
+      --text:#e8eefc;
+      --muted: rgba(232,238,252,.7);
+
+      /* 🔥 Rancho27 / asados */
+      --ember: rgba(249,115,22,.12);
+      --emberB: rgba(249,115,22,.35);
+      --blue: rgba(59,130,246,.10);
+      --blueB: rgba(59,130,246,.30);
+      --green: rgba(34,197,94,.10);
+      --greenB: rgba(34,197,94,.30);
+      --red: rgba(239,68,68,.10);
+      --redB: rgba(239,68,68,.30);
+
+      --shadow: rgba(0,0,0,.45);
+      --radius: 16px;
     }
-    table { width:100%; border-collapse: collapse; margin-top: 12px; }
-    th, td { border-bottom:1px solid #eee; padding:10px; text-align:left; }
-    th { background:#fafafa; }
-    .right { text-align:right; }
-    .badge { font-size:12px; padding:4px 8px; border:1px solid #ccc; border-radius:999px; background:#f7f7f7; }
-    .off { opacity: 0.55; }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 520px at 15% 10%, rgba(249,115,22,.18), transparent 55%),
+        radial-gradient(900px 520px at 85% 10%, rgba(239,68,68,.14), transparent 55%),
+        radial-gradient(900px 520px at 50% 95%, rgba(245,158,11,.10), transparent 55%),
+        var(--bg);
+      padding: 16px;
+    }
+
+    a{ color: var(--text); text-decoration:none; }
+    h1,h2{ margin:0; }
+
+    .wrap{ width:min(1100px, 100%); margin:0 auto; }
+
+    /* Topbar */
+    .topbar{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-bottom: 14px;
+    }
+    .title{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(249,115,22,.35);
+      background: rgba(249,115,22,.12);
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing:.2px;
+      color: var(--text);
+    }
+    .muted{ color: var(--muted); font-size: 12px; font-weight:800; }
+
+    /* Buttons */
+    .btnrow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      cursor:pointer;
+      font-weight: 900;
+      transition: transform .06s ease, filter .15s ease;
+      user-select:none;
+    }
+    .btn:hover{ transform: translateY(-1px); filter: brightness(1.06); }
+    .btn:active{ transform: translateY(0px); }
+
+    .btn.ember{ border-color: var(--emberB); background: var(--ember); }
+    .btn.blue{ border-color: var(--blueB); background: var(--blue); }
+    .btn.green{ border-color: var(--greenB); background: var(--green); }
+    .btn.red{ border-color: var(--redB); background: var(--red); }
+
+    /* Card */
+    .card{
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--card2), var(--card));
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: 0 22px 60px var(--shadow);
+      margin: 12px 0;
+    }
+
+    /* Table */
+    .tableWrap{
+      overflow:auto;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.12);
+    }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+    th, td{
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      text-align:left;
+      font-size: 13px;
+    }
+    th{
+      background: rgba(255,255,255,.06);
+      font-weight: 900;
+      color: rgba(232,238,252,.92);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    tr:hover td{ background: rgba(255,255,255,.03); }
+    .right{ text-align:right; }
+
+    /* pills */
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      color: rgba(232,238,252,.85);
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .dot{ width:10px; height:10px; border-radius:999px; background: rgba(232,238,252,.35); }
+    .pill.ok{ border-color: var(--greenB); background: rgba(34,197,94,.08); }
+    .pill.ok .dot{ background: rgba(34,197,94,.95); }
+    .pill.bad{ border-color: var(--redB); background: rgba(239,68,68,.08); }
+    .pill.bad .dot{ background: rgba(239,68,68,.95); }
+    .pill.role{ border-color: rgba(249,115,22,.28); background: rgba(249,115,22,.08); }
+
+    .offRow{ opacity: .65; }
+
+    /* action buttons inside table */
+    .btn.sm{
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+    }
+
+    .actions{
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+
+    .hint{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(249,115,22,.20);
+      background: rgba(249,115,22,.08);
+      margin-top: 10px;
+    }
+
+    @media (max-width: 560px){
+      table{ min-width: 640px; }
+    }
   </style>
 </head>
+
 <body>
+  <div class="wrap">
 
-  <div class="topbar">
-    <h1 style="margin:0;">👥 Usuarios</h1>
-    <a class="btn" href="{{ url_for('admin_panel') }}">↩️ Volver</a>
-    <a class="btn" href="{{ url_for('admin_usuario_nuevo') }}">➕ Nuevo mesero</a>
-    <a class="btn" href="{{ url_for('logout') }}">Cerrar sesión</a>
+    <!-- TOP -->
+    <div class="topbar">
+      <div class="title">
+        <h1>👥 Usuarios</h1>
+        <span class="badge">🔥 Rancho27 · Admin</span>
+        <span class="muted">Gestiona meseros (activar/desactivar/borrar)</span>
+      </div>
+
+      <div class="btnrow">
+        <a class="btn" href="{{ url_for('admin_panel') }}">↩️ Volver</a>
+        <a class="btn ember" href="{{ url_for('admin_usuario_nuevo') }}">➕ Nuevo mesero</a>
+        <a class="btn red" href="{{ url_for('logout') }}">🚪 Cerrar sesión</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:end; gap:10px; flex-wrap:wrap;">
+        <div>
+          <h2 style="font-size:16px; font-weight:900;">Listado de usuarios</h2>
+          <div class="muted">Los administradores no son editables por seguridad.</div>
+        </div>
+        <span class="pill"><span class="dot"></span> Seguridad: Admin bloqueado</span>
+      </div>
+
+      <div class="hint">
+        <div style="font-size:18px; line-height:1;">💡</div>
+        <div class="muted" style="font-weight:900;">
+          Tip: si un mesero tiene pedidos, al “Borrar” se desactiva para no romper el historial.
+        </div>
+      </div>
+
+      <div class="tableWrap" style="margin-top:12px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th class="right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in usuarios %}
+              <tr class="{% if u.role|lower == 'mesero' and not u.activo %}offRow{% endif %}">
+                <td><b>{{ u.username }}</b></td>
+
+                <td>
+                  <span class="pill role">
+                    <span class="dot" style="background:rgba(249,115,22,.9)"></span>
+                    {{ u.role }}
+                  </span>
+                </td>
+
+                <td>
+                  {% if u.role|lower == "mesero" %}
+                    {% if u.activo %}
+                      <span class="pill ok"><span class="dot"></span> Activo</span>
+                    {% else %}
+                      <span class="pill bad"><span class="dot"></span> Desactivado</span>
+                    {% endif %}
+                  {% else %}
+                    <span class="pill"><span class="dot"></span> —</span>
+                  {% endif %}
+                </td>
+
+                <td class="right">
+                  {% if u.role|lower == "mesero" %}
+                    <div class="actions">
+                      <form method="POST" action="{{ url_for('admin_usuario_toggle', user_id=u.id) }}" style="display:inline;">
+                        <button class="btn sm {% if u.activo %}warn{% else %}green{% endif %}" type="submit">
+                          {% if u.activo %}⛔ Desactivar{% else %}✅ Activar{% endif %}
+                        </button>
+                      </form>
+
+                      <form method="POST" action="{{ url_for('admin_usuario_eliminar', user_id=u.id) }}" style="display:inline;">
+                        <button class="btn sm red" type="submit"
+                                onclick="return confirm('¿Eliminar mesero {{ u.username }}? (si tiene pedidos se desactivará)');">
+                          🗑️ Borrar
+                        </button>
+                      </form>
+                    </div>
+                  {% else %}
+                    <span class="muted" style="font-weight:900;">No editable</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
   </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Usuario</th>
-        <th>Rol</th>
-        <th>Estado</th>
-        <th class="right">Acciones</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for u in usuarios %}
-      <tr class="{% if u.role|lower == 'mesero' and not u.activo %}off{% endif %}">
-        <td><b>{{ u.username }}</b></td>
-        <td><span class="badge">{{ u.role }}</span></td>
-        <td>
-          {% if u.role|lower == "mesero" %}
-            {% if u.activo %}✅ Activo{% else %}⛔ Desactivado{% endif %}
-          {% else %}
-            —
-          {% endif %}
-        </td>
-        <td class="right">
-          {% if u.role|lower == "mesero" %}
-            <form method="POST" action="{{ url_for('admin_usuario_toggle', user_id=u.id) }}" style="display:inline;">
-              <button class="btn" type="submit">
-                {% if u.activo %}⛔ Desactivar{% else %}✅ Activar{% endif %}
-              </button>
-            </form>
-
-            <form method="POST" action="{{ url_for('admin_usuario_eliminar', user_id=u.id) }}" style="display:inline;">
-              <button class="btn" type="submit" onclick="return confirm('¿Eliminar mesero {{ u.username }}? (si tiene pedidos se desactivará)');">
-                🗑️ Borrar
-              </button>
-            </form>
-          {% else %}
-            <span style="color:#666; font-size:12px;">No editable</span>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-
 </body>
 </html>

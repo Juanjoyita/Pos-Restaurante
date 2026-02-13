@@ -1,17 +1,509 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Login POS</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body>
-    <h2>Login POS Restaurante</h2>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rancho27 | Login</title>
 
-    <form method="POST">
-        <input type="text" name="username" placeholder="Usuario" required><br><br>
-        <input type="password" name="password" placeholder="Contraseña" required><br><br>
-        <button type="submit">Ingresar</button>
-    </form>
+  <style>
+    :root{
+      --bg: #0b1220;
+      --card: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.12);
+      --text: #e8eefc;
+      --muted: rgba(232,238,252,.7);
+
+      /* 🔥 fuego / asados */
+      --ember: rgba(249,115,22,.18);
+      --emberB: rgba(249,115,22,.45);
+      --red: rgba(239,68,68,.16);
+      --redB: rgba(239,68,68,.38);
+      --gold: rgba(245,158,11,.14);
+      --goldB: rgba(245,158,11,.38);
+      --green: rgba(34,197,94,.14);
+      --greenB: rgba(34,197,94,.35);
+
+      --shadow: rgba(0,0,0,.45);
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      min-height:100vh;
+      display:grid;
+      place-items:center;
+      font-family: Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 520px at 15% 15%, rgba(249,115,22,.18), transparent 55%),
+        radial-gradient(900px 520px at 85% 10%, rgba(239,68,68,.16), transparent 55%),
+        radial-gradient(900px 520px at 50% 90%, rgba(245,158,11,.12), transparent 55%),
+        var(--bg);
+      padding: 18px;
+      overflow:hidden;
+      position:relative;
+    }
+
+    /* 🔥 embers flotando (súper sutil) */
+    .embers{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      opacity:.55;
+      filter: blur(.1px);
+    }
+    .ember{
+      position:absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, rgba(249,115,22,.95), rgba(239,68,68,.2) 55%, transparent 70%);
+      box-shadow: 0 0 18px rgba(249,115,22,.35);
+      animation: floatUp linear infinite;
+      opacity:.85;
+    }
+    .ember:nth-child(1){ left:10%; bottom:-10px; animation-duration: 9s;  animation-delay: 0s;  transform: scale(.8); }
+    .ember:nth-child(2){ left:22%; bottom:-10px; animation-duration: 12s; animation-delay: 1s;  transform: scale(.6); }
+    .ember:nth-child(3){ left:35%; bottom:-10px; animation-duration: 10s; animation-delay: 2s;  transform: scale(1.0); }
+    .ember:nth-child(4){ left:58%; bottom:-10px; animation-duration: 13s; animation-delay: .5s; transform: scale(.7); }
+    .ember:nth-child(5){ left:72%; bottom:-10px; animation-duration: 11s; animation-delay: 1.7s;transform: scale(.9); }
+    .ember:nth-child(6){ left:86%; bottom:-10px; animation-duration: 14s; animation-delay: 2.4s;transform: scale(.65); }
+
+    @keyframes floatUp{
+      0%   { transform: translateY(0) translateX(0) scale(var(--s,1)); opacity: .0; }
+      10%  { opacity: .8; }
+      60%  { opacity: .7; }
+      100% { transform: translateY(-110vh) translateX(30px); opacity: 0; }
+    }
+
+    .shell{
+      width: min(980px, 100%);
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 14px;
+      align-items: stretch;
+      position:relative;
+      z-index: 1;
+    }
+
+    .hero{
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: 20px;
+      padding: 18px;
+      position: relative;
+      overflow:hidden;
+      box-shadow: 0 22px 60px var(--shadow);
+      min-height: 370px;
+    }
+
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:-130px -130px auto auto;
+      width: 300px;
+      height: 300px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, rgba(249,115,22,.40), transparent 60%);
+      opacity:.95;
+    }
+
+    .hero::after{
+      content:"";
+      position:absolute;
+      inset:auto auto -150px -150px;
+      width: 320px;
+      height: 320px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, rgba(239,68,68,.32), transparent 60%);
+      opacity:.95;
+    }
+
+    .brandRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      position:relative;
+      z-index: 1;
+    }
+
+    .badge{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(249,115,22,.35);
+      background: rgba(249,115,22,.12);
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing: .3px;
+    }
+
+    .grillIcon{
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      display:grid;
+      place-items:center;
+    }
+    .grillIcon svg{ width: 22px; height: 22px; color: rgba(232,238,252,.85); }
+
+    .hero h1{
+      margin: 14px 0 8px 0;
+      font-size: 34px;
+      letter-spacing: .6px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero p{
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      position: relative;
+      z-index: 1;
+      max-width: 46ch;
+    }
+
+    .stats{
+      margin-top: 16px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      position: relative;
+      z-index: 1;
+    }
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+    .dot{
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(34,197,94,.85);
+      box-shadow: 0 0 0 4px rgba(34,197,94,.14);
+    }
+    .dot2{
+      background: rgba(249,115,22,.9);
+      box-shadow: 0 0 0 4px rgba(249,115,22,.14);
+    }
+
+    .card{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 22px 60px var(--shadow);
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      min-height: 370px;
+    }
+
+    .card h2{
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: .2px;
+      font-weight: 900;
+    }
+    .sub{
+      margin: 6px 0 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .form{
+      margin-top: 14px;
+      display:grid;
+      gap: 12px;
+    }
+
+    .field{ display:grid; gap: 6px; }
+    label{
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 900;
+      letter-spacing:.2px;
+    }
+
+    .inputWrap{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      padding: 10px 12px;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .inputWrap:focus-within{
+      border-color: var(--emberB);
+      box-shadow: 0 0 0 3px rgba(249,115,22,.10);
+    }
+
+    .icon{
+      width: 18px;
+      height: 18px;
+      opacity: .9;
+      flex: 0 0 auto;
+      color: var(--muted);
+    }
+
+    input{
+      width: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 14px;
+      font-weight: 800;
+    }
+    input::placeholder{ color: rgba(232,238,252,.45); font-weight: 800; }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 10px;
+      flex-wrap:wrap;
+      margin-top: 2px;
+    }
+
+    .hint{
+      font-size: 12px;
+      color: var(--muted);
+      display:flex;
+      gap:8px;
+      align-items:center;
+      user-select:none;
+      font-weight: 800;
+    }
+    .toggle{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      cursor:pointer;
+    }
+    .check{
+      width: 16px;
+      height: 16px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.05);
+      display:grid;
+      place-items:center;
+      font-size: 12px;
+      line-height: 1;
+      color: transparent;
+    }
+    .toggle[data-on="1"] .check{
+      border-color: var(--greenB);
+      background: rgba(34,197,94,.14);
+      color: #d8ffe8;
+    }
+
+    /* 🔥 Botón chispa */
+    .btn{
+      width: 100%;
+      border: 1px solid var(--emberB);
+      background: linear-gradient(180deg, rgba(249,115,22,.22), rgba(239,68,68,.16));
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-weight: 900;
+      cursor:pointer;
+      letter-spacing: .2px;
+      position: relative;
+      overflow:hidden;
+      transition: transform .06s ease, filter .15s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); filter: brightness(1.07); }
+    .btn:active{ transform: translateY(0px); }
+
+    .btn::before{
+      content:"";
+      position:absolute;
+      inset:-40px auto auto -80px;
+      width: 90px;
+      height: 90px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.22), transparent 62%);
+      opacity: .0;
+      transform: translateX(0);
+      transition: opacity .15s ease;
+    }
+    .btn:hover::before{
+      opacity: .55;
+      animation: spark 0.9s ease forwards;
+    }
+
+    @keyframes spark{
+      0%   { transform: translateX(0) translateY(0); }
+      100% { transform: translateX(360px) translateY(12px); }
+    }
+
+    .msg{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--redB);
+      background: var(--red);
+      color: #ffd7de;
+      font-weight: 900;
+      font-size: 12px;
+      text-align:center;
+      display:none;
+    }
+    .msg.show{ display:block; }
+
+    .foot{
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 11px;
+      text-align:center;
+      font-weight: 700;
+    }
+
+    @media (max-width: 860px){
+      .shell{ grid-template-columns: 1fr; }
+      .hero{ min-height: 230px; }
+      .card{ min-height: auto; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- embers -->
+  <div class="embers" aria-hidden="true">
+    <div class="ember"></div>
+    <div class="ember"></div>
+    <div class="ember"></div>
+    <div class="ember"></div>
+    <div class="ember"></div>
+    <div class="ember"></div>
+  </div>
+
+  <div class="shell">
+
+    <!-- Lado izquierdo -->
+    <section class="hero">
+      <div class="brandRow">
+        <div class="badge">🔥 Rancho27 · POS</div>
+
+        <div class="grillIcon" title="Asados">
+          <!-- icono parrilla -->
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M6 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M7 13h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8 16h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M8 21l-2-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M16 21l2-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M10 3c-1.5 1.5-1 3.5 0 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M14 3c-1.5 1.5-1 3.5 0 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <h1>Control total para tu parrilla</h1>
+      <p>
+        Mesas, pedidos y caja en un solo lugar. Diseñado para velocidad
+        en servicio y precisión al cobrar.
+      </p>
+
+      <div class="stats">
+        <span class="pill"><span class="dot"></span> Sistema en línea</span>
+        <span class="pill"><span class="dot2"></span> Asados · Fuego · Sabor</span>
+      </div>
+    </section>
+
+    <!-- Lado derecho -->
+    <section class="card">
+      <div>
+        <h2>Iniciar sesión</h2>
+        <div class="sub">Ingresa con tu usuario de <b>admin</b> o <b>mesero</b>.</div>
+      </div>
+
+      {% if error %}
+        <div class="msg show" id="msg-server">{{ error }}</div>
+      {% else %}
+        <div class="msg" id="msg-server"></div>
+      {% endif %}
+
+      <form class="form" method="POST" autocomplete="on">
+        <div class="field">
+          <label for="username">Usuario</label>
+          <div class="inputWrap">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M20 21a8 8 0 1 0-16 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <input id="username" type="text" name="username" placeholder="Ej: admin" required />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="password">Contraseña</label>
+          <div class="inputWrap">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M7 11V8a5 5 0 0 1 10 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M6 11h12v10H6V11Z" stroke="currentColor" stroke-width="2" />
+              <path d="M12 15v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <input id="password" type="password" name="password" placeholder="Tu contraseña" required />
+          </div>
+
+          <div class="row">
+            <div class="hint toggle" id="toggleShow" data-on="0">
+              <span class="check">✓</span>
+              <span>Mostrar contraseña</span>
+            </div>
+            <div class="hint" id="capsHint" style="display:none;">⚠️ Caps Lock activado</div>
+          </div>
+        </div>
+
+        <button class="btn" type="submit">Entrar 🔥</button>
+
+        <div class="foot">
+          Rancho27 POS · Acceso privado · Si no puedes entrar, contacta al administrador.
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <script>
+    // Mostrar/ocultar contraseña
+    const toggle = document.getElementById("toggleShow");
+    const pass = document.getElementById("password");
+    toggle.addEventListener("click", () => {
+      const on = toggle.getAttribute("data-on") === "1";
+      toggle.setAttribute("data-on", on ? "0" : "1");
+      pass.type = on ? "password" : "text";
+    });
+
+    // Aviso Caps Lock
+    const capsHint = document.getElementById("capsHint");
+    pass.addEventListener("keyup", (e) => {
+      const caps = e.getModifierState && e.getModifierState("CapsLock");
+      capsHint.style.display = caps ? "block" : "none";
+    });
+
+    // Auto focus
+    document.getElementById("username").focus();
+  </script>
 </body>
 </html>

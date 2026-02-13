@@ -1,35 +1,356 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Pedidos - Admin</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pedidos - Admin · Rancho27</title>
+
   <style>
-    body { font-family: Arial, sans-serif; padding: 16px; }
-    .pedido { border:1px solid #ccc; padding:10px; margin-bottom:10px; border-radius:10px; }
-    .pedido-nuevo { border-color:#2ecc71; background:#ecfdf3; }
-    .topbar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-    .btn { padding:10px 12px; border:1px solid #333; background:#eee; cursor:pointer; border-radius:8px; }
-    a.btn { text-decoration:none; color:#000; display:inline-block; }
-    .total { font-weight:bold; margin-top:8px; }
+    :root{
+      --bg:#0b1220;
+      --card: rgba(255,255,255,.04);
+      --card2: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.12);
+      --text:#e8eefc;
+      --muted: rgba(232,238,252,.7);
+
+      /* 🔥 Rancho27 */
+      --ember: rgba(249,115,22,.12);
+      --emberB: rgba(249,115,22,.35);
+      --green: rgba(34,197,94,.12);
+      --greenB: rgba(34,197,94,.35);
+      --red: rgba(239,68,68,.12);
+      --redB: rgba(239,68,68,.35);
+      --blue: rgba(59,130,246,.12);
+      --blueB: rgba(59,130,246,.35);
+
+      --shadow: rgba(0,0,0,.45);
+      --radius: 16px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 520px at 15% 10%, rgba(249,115,22,.18), transparent 55%),
+        radial-gradient(900px 520px at 85% 10%, rgba(239,68,68,.14), transparent 55%),
+        radial-gradient(900px 520px at 50% 95%, rgba(245,158,11,.10), transparent 55%),
+        var(--bg);
+      padding: 16px;
+    }
+
+    a{ color: var(--text); text-decoration:none; }
+    h1,h2,h3{ margin:0; }
+
+    .wrap{ width:min(1100px, 100%); margin:0 auto; }
+
+    /* Topbar */
+    .topbar{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-bottom: 14px;
+    }
+    .title{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .badge{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(249,115,22,.35);
+      background: rgba(249,115,22,.12);
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing:.2px;
+      color: var(--text);
+      width: fit-content;
+    }
+
+    .btnrow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      cursor:pointer;
+      font-weight: 900;
+      transition: transform .06s ease, filter .15s ease, border-color .15s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{ transform: translateY(-1px); filter: brightness(1.06); }
+    .btn:active{ transform: translateY(0px); }
+
+    .btn.blue{ border-color: var(--blueB); background: var(--blue); }
+    .btn.ember{ border-color: var(--emberB); background: var(--ember); }
+    .btn.green{ border-color: var(--greenB); background: var(--green); }
+    .btn.red{ border-color: var(--redB); background: var(--red); }
+
+    .muted{ color: var(--muted); font-size: 12px; font-weight:800; }
+
+    /* Cards */
+    .card{
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--card2), var(--card));
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: 0 22px 60px var(--shadow);
+      margin: 12px 0;
+    }
+
+    /* controls */
+    .controls{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .toggle{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      user-select:none;
+    }
+    .switch{
+      width: 44px;
+      height: 26px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.25);
+      position: relative;
+      cursor: pointer;
+      flex: 0 0 auto;
+    }
+    .knob{
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      background: rgba(232,238,252,.9);
+      position:absolute;
+      top: 50%;
+      left: 3px;
+      transform: translateY(-50%);
+      transition: .18s ease;
+    }
+    .switch.on{
+      border-color: var(--greenB);
+      background: rgba(34,197,94,.12);
+    }
+    .switch.on .knob{ left: 20px; background: rgba(34,197,94,.95); }
+
+    /* orders layout */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .pedido{
+      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.35);
+      position: relative;
+      overflow:hidden;
+    }
+
+    /* “nuevo” con glow suave */
+    .pedido.nuevo{
+      border-color: rgba(34,197,94,.35);
+      box-shadow:
+        0 18px 50px rgba(0,0,0,.35),
+        0 0 0 2px rgba(34,197,94,.08);
+    }
+    .pedido.nuevo::before{
+      content:"";
+      position:absolute;
+      inset: -40px -40px auto auto;
+      width: 140px;
+      height: 140px;
+      background: radial-gradient(circle at 30% 30%, rgba(34,197,94,.20), transparent 60%);
+      filter: blur(0px);
+      pointer-events:none;
+    }
+
+    .head{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom: 8px;
+    }
+    .headLeft{
+      display:grid;
+      gap:6px;
+    }
+    .hline{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      font-size: 12px;
+      font-weight: 900;
+      color: rgba(232,238,252,.88);
+      white-space: nowrap;
+    }
+    .pill.ember{ border-color: var(--emberB); background: var(--ember); }
+    .pill.blue{ border-color: var(--blueB); background: var(--blue); }
+    .pill.green{ border-color: var(--greenB); background: var(--green); }
+
+    .items{
+      margin: 10px 0 0 0;
+      padding: 0;
+      list-style:none;
+      border-top: 1px solid rgba(255,255,255,.10);
+    }
+    .items li{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      font-size: 13px;
+    }
+    .items li:last-child{ border-bottom:none; }
+
+    .iname{ font-weight: 900; }
+    .isub{ color: rgba(232,238,252,.92); font-weight: 900; }
+    .meta2{ color: var(--muted); font-size: 12px; font-weight:800; margin-top: 2px; }
+
+    .totalRow{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255,255,255,.10);
+    }
+    .total{
+      font-size: 16px;
+      font-weight: 1000;
+      letter-spacing:.2px;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      margin-top: 10px;
+    }
+
+    .empty{
+      text-align:center;
+      padding: 30px 10px;
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    /* small skeleton */
+    .skeleton{
+      height: 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      overflow:hidden;
+      position: relative;
+    }
+    .skeleton::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.10), transparent);
+      transform: translateX(-100%);
+      animation: shimmer 1.1s infinite;
+    }
+    @keyframes shimmer{
+      to{ transform: translateX(100%); }
+    }
+
+    @media (max-width: 520px){
+      .grid{ grid-template-columns: 1fr; }
+    }
   </style>
 </head>
+
 <body>
+  <div class="wrap">
 
-  <div class="topbar">
-    <h2 style="margin:0;">🧾 Pedidos abiertos (tiempo real)</h2>
-    <a class="btn" href="{{ url_for('admin_panel') }}">↩️ Volver</a>
-    <button class="btn" id="btn-sonido">🔔 Activar sonido</button>
-    <span id="estado-sonido">Sonido: OFF</span>
-  </div>
+    <div class="topbar">
+      <div class="title">
+        <h2>🧾 Pedidos abiertos</h2>
+        <span class="badge">🔥 Rancho27 · Tiempo real</span>
+      </div>
 
-  <div id="pedidos-container" style="margin-top:12px;">
-    <p>Cargando pedidos…</p>
+      <div class="btnrow">
+        <a class="btn" href="{{ url_for('admin_panel') }}">↩️ Volver</a>
+
+        <div class="toggle" title="Activa una alerta sonora cuando entra un pedido nuevo">
+          <div class="muted" style="font-weight:900;">🔔 Sonido</div>
+          <div id="switchSound" class="switch" role="switch" aria-checked="false" tabindex="0">
+            <div class="knob"></div>
+          </div>
+          <span id="estadoSonido" class="muted" style="font-weight:900;">OFF</span>
+        </div>
+
+        <button class="btn ember" id="btn-refresh" type="button">🔄 Actualizar</button>
+      </div>
+    </div>
+
+    <div id="pedidos-container" class="card">
+      <div class="muted" style="margin-bottom:10px;">Cargando pedidos…</div>
+      <div class="grid">
+        <div class="pedido">
+          <div class="skeleton" style="width:65%;"></div>
+          <div class="skeleton" style="width:85%; margin-top:10px;"></div>
+          <div class="skeleton" style="width:55%; margin-top:10px;"></div>
+        </div>
+        <div class="pedido">
+          <div class="skeleton" style="width:60%;"></div>
+          <div class="skeleton" style="width:80%; margin-top:10px;"></div>
+          <div class="skeleton" style="width:50%; margin-top:10px;"></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script>
     let sonidoActivado = false;
     let pedidosMostrados = new Set();
+    let primeraCarga = true;
 
     function beep() {
       if (!sonidoActivado) return;
@@ -42,66 +363,144 @@
         o.frequency.value = 880;
         g.gain.value = 0.05;
         o.start();
-        setTimeout(() => { o.stop(); ctx.close(); }, 180);
+        setTimeout(() => { o.stop(); ctx.close(); }, 160);
       } catch (e) {}
     }
 
-    document.getElementById("btn-sonido").addEventListener("click", () => {
-      sonidoActivado = true;
-      document.getElementById("estado-sonido").textContent = "Sonido: ON";
-      beep();
+    function setSoundUI(on){
+      const sw = document.getElementById("switchSound");
+      const st = document.getElementById("estadoSonido");
+      if (!sw || !st) return;
+      sw.classList.toggle("on", on);
+      sw.setAttribute("aria-checked", on ? "true" : "false");
+      st.textContent = on ? "ON" : "OFF";
+      st.style.color = on ? "rgba(34,197,94,.95)" : "rgba(232,238,252,.7)";
+    }
+
+    function toggleSound(){
+      sonidoActivado = !sonidoActivado;
+      setSoundUI(sonidoActivado);
+      if (sonidoActivado) beep();
+    }
+
+    document.getElementById("switchSound").addEventListener("click", toggleSound);
+    document.getElementById("switchSound").addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleSound(); }
+    });
+
+    document.getElementById("btn-refresh").addEventListener("click", () => {
+      cargarPedidos(true);
     });
 
     function formatoDinero(n) {
       return "$" + Math.round(n).toLocaleString("es-CO");
     }
 
-    async function cargarPedidos() {
-      const res = await fetch("/admin/pedidos.json", { cache: "no-store" });
-      if (!res.ok) return;
+    function escapeHtml(str){
+      return String(str ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
 
-      const data = await res.json();
-      const cont = document.getElementById("pedidos-container");
-      const pedidos = data.pedidos || [];
+    function renderPedidos(pedidos){
+      const contWrap = document.getElementById("pedidos-container");
 
-      if (pedidos.length === 0) {
-        cont.innerHTML = "<p>No hay pedidos abiertos.</p>";
+      if (!pedidos || pedidos.length === 0) {
+        contWrap.innerHTML = `<div class="empty">No hay pedidos abiertos.</div>`;
         pedidosMostrados.clear();
+        primeraCarga = false;
         return;
       }
 
-      // sonar si hay uno nuevo
+      // detectar nuevos (pero NO sonar en la primera carga)
       let hayNuevo = false;
       for (const p of pedidos) {
         if (!pedidosMostrados.has(p.id)) hayNuevo = true;
       }
-      if (hayNuevo) beep();
+      if (!primeraCarga && hayNuevo) beep();
 
-      cont.innerHTML = pedidos.map(p => {
+      const htmlCards = pedidos.map(p => {
         const esNuevo = !pedidosMostrados.has(p.id);
         pedidosMostrados.add(p.id);
 
-        const itemsHtml = (p.detalles || []).map(d => `
-          <li>${d.nombre} x ${d.cantidad} — ${formatoDinero(d.precio)} c/u — <b>${formatoDinero(d.subtotal)}</b></li>
-        `).join("");
+        const itemsHtml = (p.detalles || []).map(d => {
+          const nombre = escapeHtml(d.nombre);
+          const cant = Number(d.cantidad || 0);
+          const precio = Number(d.precio || 0);
+          const subtotal = Number(d.subtotal || 0);
+          return `
+            <li>
+              <div>
+                <div class="iname">${nombre} <span class="meta2">x ${cant}</span></div>
+                <div class="meta2">${formatoDinero(precio)} c/u</div>
+              </div>
+              <div class="isub">${formatoDinero(subtotal)}</div>
+            </li>
+          `;
+        }).join("");
 
-        const hora = p.hora || "";
+        // Hora: si tu JSON trae "fecha" en ISO, mostramos HH:MM usando JS.
+        // Si ya lo envías listo desde backend, úsalo igual.
+        let hora = "";
+        if (p.hora) {
+          hora = escapeHtml(p.hora);
+        } else if (p.fecha) {
+          try{
+            const dt = new Date(p.fecha);
+            hora = dt.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+          }catch(e){}
+        }
+
+        const metodo = p.metodo ? escapeHtml(p.metodo) : "";
+        const total = Number(p.total || 0);
 
         return `
-          <div class="pedido ${esNuevo ? "pedido-nuevo" : ""}">
-            <p><b>Pedido #${p.id}</b> | Mesa <b>${p.mesa}</b> | Mesero <b>${p.mesero}</b> | ${hora}</p>
-            <ul>${itemsHtml}</ul>
-            <div class="total">TOTAL: ${formatoDinero(p.total || 0)}</div>
+          <div class="pedido ${esNuevo ? "nuevo" : ""}">
+            <div class="head">
+              <div class="headLeft">
+                <div class="hline">
+                  <span class="pill ember">Pedido #${p.id}</span>
+                  <span class="pill blue">Mesa ${escapeHtml(p.mesa)}</span>
+                  <span class="pill">${escapeHtml(p.mesero || "")}</span>
+                  ${hora ? `<span class="pill green">🕒 ${hora}</span>` : ``}
+                </div>
+                <div class="muted">Revisa y cierra cuando esté listo para cobrar.</div>
+              </div>
+            </div>
 
-            <form method="POST" action="/admin/pedido/${p.id}/cerrar" style="margin-top:10px;">
-              <button class="btn" type="submit">Cerrar pedido (liberar mesa)</button>
-              <a class="btn" href="/admin/factura/${p.id}?print=1">🧾 Factura</a>
-            </form>
+            <ul class="items">${itemsHtml}</ul>
+
+            <div class="totalRow">
+              <div class="total">TOTAL: ${formatoDinero(total)}</div>
+              <div class="actions">
+                <form method="POST" action="/admin/pedido/${p.id}/cerrar">
+                  <button class="btn red" type="submit">✅ Cerrar (liberar mesa)</button>
+                </form>
+                <a class="btn green" href="/admin/factura/${p.id}?print=1">🧾 Factura</a>
+              </div>
+            </div>
           </div>
         `;
       }).join("");
+
+      contWrap.innerHTML = `<div class="grid">${htmlCards}</div>`;
+      primeraCarga = false;
     }
 
+    async function cargarPedidos(forzar = false) {
+      try{
+        const res = await fetch("/admin/pedidos.json", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        renderPedidos(data.pedidos || []);
+      } catch(e){}
+    }
+
+    // init
+    setSoundUI(false);
     cargarPedidos();
     setInterval(cargarPedidos, 2500);
   </script>

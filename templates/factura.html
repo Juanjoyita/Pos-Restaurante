@@ -6,192 +6,326 @@
   <title>Factura #{{ pedido.id }}</title>
 
   <style>
-    /* --- Ticket 80mm --- */
-    @page {
-      size: 80mm auto;
-      margin: 6mm;
+    /* =========================
+       ✅ TICKET 80mm (PRINT)
+       ========================= */
+    @page { size: 80mm auto; margin: 6mm; }
+
+    /* =========================
+       ✅ DARK UI (SCREEN)
+       ========================= */
+    :root{
+      --bg: #0b1220;
+      --card: rgba(255,255,255,.05);
+      --card2: rgba(255,255,255,.04);
+      --border: rgba(255,255,255,.12);
+      --text: #e8eefc;
+      --muted: rgba(232,238,252,.75);
+      --muted2: rgba(232,238,252,.55);
+
+      --green: rgba(34,197,94,.16);
+      --greenB: rgba(34,197,94,.35);
+
+      --blue: rgba(59,130,246,.16);
+      --blueB: rgba(59,130,246,.35);
+
+      --red: rgba(239,68,68,.14);
+      --redB: rgba(239,68,68,.35);
+
+      --amber: rgba(245,158,11,.14);
+      --amberB: rgba(245,158,11,.35);
     }
 
-    body {
+    body{
       font-family: Arial, sans-serif;
-      font-size: 12px;
       margin: 0;
-      padding: 0;
-      color: #000;
+      padding: 16px;
+      background: radial-gradient(900px 420px at 10% 10%, rgba(34,197,94,.14), transparent 55%),
+                  radial-gradient(900px 420px at 90% 10%, rgba(59,130,246,.14), transparent 55%),
+                  var(--bg);
+      color: var(--text);
     }
 
-    .ticket {
+    /* Contenedor tipo "card" para pantalla */
+    .wrap{
+      max-width: 540px;
+      margin: 0 auto;
+      border: 1px solid var(--border);
+      background: var(--card);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+    }
+
+    /* Ticket interno (sigue siendo 80mm) */
+    .ticket{
       width: 80mm;
       margin: 0 auto;
+      border: 1px solid var(--border);
+      background: var(--card2);
+      border-radius: 16px;
+      padding: 12px;
     }
 
     .center { text-align: center; }
     .right { text-align: right; }
-    .bold { font-weight: bold; }
+    .bold { font-weight: 800; }
 
-    .line {
-      border-top: 1px dashed #000;
-      margin: 8px 0;
+    .brand{
+      font-size: 15px;
+      letter-spacing: .6px;
     }
 
-    table {
+    .muted{ color: var(--muted); }
+    .muted2{ color: var(--muted2); }
+
+    .line{
+      border-top: 1px dashed rgba(232,238,252,.35);
+      margin: 10px 0;
+    }
+
+    .meta{
+      display: grid;
+      gap: 4px;
+      font-size: 12px;
+    }
+    .meta b{ color: var(--text); }
+
+    table{
       width: 100%;
       border-collapse: collapse;
+      font-size: 12px;
     }
-
-    td {
-      padding: 2px 0;
+    td{
+      padding: 3px 0;
       vertical-align: top;
     }
 
-    .qty { width: 18mm; }
-    .subtotal { width: 22mm; }
+    .qty{ width: 18mm; color: var(--muted); }
+    .subtotal{ width: 22mm; }
 
-    .actions {
-      margin: 10px 0;
+    .item-note{
+      font-size: 11px;
+      color: var(--muted2);
+      padding-bottom: 6px;
+    }
+
+    .totalBox{
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      border-radius: 12px;
+      padding: 10px;
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      gap: 10px;
+      margin-top: 2px;
+    }
+    .totalBox .label{ color: var(--muted); font-size: 12px; }
+    .totalBox .value{ font-size: 16px; font-weight: 900; }
+
+    .msg-error, .msg-ok{
+      width: 100%;
+      text-align: center;
+      font-weight: 800;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.04);
+    }
+    .msg-error{
+      border-color: var(--redB);
+      background: var(--red);
+      color: #ffd7de;
+    }
+    .msg-ok{
+      border-color: var(--greenB);
+      background: var(--green);
+      color: #d8ffe8;
+    }
+
+    .actions{
+      margin-top: 12px;
       display: flex;
-      gap: 8px;
+      gap: 10px;
       justify-content: center;
       flex-wrap: wrap;
     }
 
-    .btn {
+    /* Botones estilo admin */
+    .btn{
       padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
       cursor: pointer;
-      border: 1px solid #333;
-      background: #eee;
-      border-radius: 4px;
+      font-weight: 800;
       font-size: 12px;
+      transition: transform .06s ease, background .15s ease, border-color .15s ease;
+      outline: none;
+    }
+    .btn:hover{ transform: translateY(-1px); }
+    .btn:active{ transform: translateY(0px); }
+
+    a.btn{ text-decoration: none; display:inline-block; }
+
+    .btn.green{ border-color: var(--greenB); background: var(--green); }
+    .btn.blue{ border-color: var(--blueB); background: var(--blue); }
+    .btn.red{ border-color: var(--redB); background: var(--red); }
+    .btn.amber{ border-color: var(--amberB); background: var(--amber); }
+
+    select.btn, input.btn{
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    input.btn{
+      width: 160px;
     }
 
-    a.btn {
-      text-decoration: none;
-      color: #000;
-      display: inline-block;
-    }
-
-    .msg-error {
-      width: 100%;
-      text-align: center;
-      font-weight: bold;
-      color: #b00020;
-      margin-top: 6px;
-    }
-
-    .msg-ok {
-      width: 100%;
-      text-align: center;
-      font-weight: bold;
-      margin-top: 6px;
-    }
-
-    /* --- Al imprimir: ocultar botones --- */
-    @media print {
-      .actions { display: none; }
-      .msg-error, .msg-ok { display: none; }
+    /* =========================
+       ✅ PRINT: modo ticket clásico
+       ========================= */
+    @media print{
+      body{
+        background: #fff !important;
+        color: #000 !important;
+        padding: 0 !important;
+      }
+      .wrap{
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        max-width: none !important;
+      }
+      .ticket{
+        border: none !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+        color: #000 !important;
+      }
+      .line{
+        border-top: 1px dashed #000 !important;
+      }
+      .qty{ color:#000 !important; }
+      .muted, .muted2{ color:#000 !important; opacity: .85; }
+      .totalBox{
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+      }
+      .actions, .msg-error, .msg-ok{ display:none !important; }
     }
   </style>
 </head>
 
 <body>
-  <div class="ticket">
-    <div class="center">
-      <div class="bold" style="font-size: 14px;">RANCHO 27</div>
-      <div>NIT: 000000000</div>
-      <div>Dirección: Kilometro 27</div>
-      <div>Tel: 3225935689</div>
-    </div>
+  <div class="wrap">
 
-    <div class="line"></div>
+    <div class="ticket">
+      <div class="center">
+        <div class="bold brand">RANCHO 27</div>
+        <div class="muted2">NIT: 000000000</div>
+        <div class="muted2">Dirección: Kilometro 27</div>
+        <div class="muted2">Tel: 3225935689</div>
+      </div>
 
-    <div>
-      <div><span class="bold">Factura:</span> #{{ pedido.id }}</div>
-      <div><span class="bold">Mesa:</span> {{ pedido.mesa.numero }}</div>
-      <div><span class="bold">Mesero:</span> {{ pedido.mesero.username }}</div>
+      <div class="line"></div>
 
-      <!-- ✅ HORA CORRECTA: primero fecha_cierre (si ya pagó), si no, fecha -->
-      <div><span class="bold">Hora:</span> {{ (pedido.fecha_cierre or pedido.fecha)|hora_bogota }}</div>
-    </div>
+      <div class="meta">
+        <div><span class="muted">Factura:</span> <b>#{{ pedido.id }}</b></div>
+        <div><span class="muted">Mesa:</span> <b>{{ pedido.mesa.numero }}</b></div>
+        <div><span class="muted">Mesero:</span> <b>{{ pedido.mesero.username }}</b></div>
 
-    <div class="line"></div>
+        <!-- ✅ HORA CORRECTA: primero fecha_cierre (si ya pagó), si no, fecha -->
+        <div><span class="muted">Hora:</span> <b>{{ (pedido.fecha_cierre or pedido.fecha)|hora_bogota }}</b></div>
+      </div>
 
-    <table>
-      <tbody>
-        {% for it in items %}
-          <tr>
-            <td class="qty">{{ it.cantidad }}x</td>
-            <td>{{ it.nombre }}</td>
-            <td class="right subtotal">{{ it.subtotal|cop }}</td>
-          </tr>
-          <tr>
-            <td></td>
-            <td style="font-size: 11px; color: #111;">
-              ({{ it.precio|cop }} c/u)
-            </td>
-            <td></td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+      <div class="line"></div>
 
-    <div class="line"></div>
+      <table>
+        <tbody>
+          {% for it in items %}
+            <tr>
+              <td class="qty">{{ it.cantidad }}x</td>
+              <td>{{ it.nombre }}</td>
+              <td class="right subtotal bold">{{ it.subtotal|cop }}</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td class="item-note">({{ it.precio|cop }} c/u)</td>
+              <td></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
 
-    <div class="right bold" style="font-size: 14px;">
-      TOTAL: {{ total|cop }}
-    </div>
+      <div class="line"></div>
 
-    <div class="line"></div>
-
-    <div class="center">
-      <div>¡Gracias por tu visita! 🙌</div>
-      <div style="font-size: 11px;">Vuelve pronto</div>
-    </div>
-
-    <!-- ✅ MENSAJES DE ERROR -->
-    {% if error == "pago_insuficiente" %}
-      <div class="msg-error">❌ El efectivo recibido no alcanza el total.</div>
-    {% elif error == "metodo_invalido" %}
-      <div class="msg-error">❌ Selecciona un método de pago válido.</div>
-    {% endif %}
-
-    <div class="actions">
-
-      {% if pedido.estado != "cerrado" %}
-        <form method="POST"
-              action="{{ url_for('cobrar_pedido', pedido_id=pedido.id) }}"
-              style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; width:100%;">
-
-          <select class="btn" name="metodo_pago" id="metodo_pago" required>
-            <option value="">Método de pago</option>
-            <option value="efectivo">Efectivo</option>
-            <option value="transferencia">Transferencia</option>
-            <option value="tarjeta">Tarjeta</option>
-          </select>
-
-          <input class="btn"
-                 type="number"
-                 name="monto_recibido"
-                 id="monto_recibido"
-                 placeholder="Recibido (solo efectivo)"
-                 step="0.01"
-                 style="display:none;">
-
-          <button class="btn" type="submit">💳 Cobrar e imprimir</button>
-        </form>
-      {% else %}
-        <div class="msg-ok">
-          ✅ Pedido pagado
-          {% if pedido.metodo_pago %}
-            ({{ pedido.metodo_pago }})
-          {% endif %}
-          {% if pedido.cambio is not none and pedido.metodo_pago == "efectivo" %}
-            | Cambio: {{ pedido.cambio|cop }}
-          {% endif %}
+      <div class="totalBox">
+        <div>
+          <div class="label">TOTAL</div>
+          <div class="muted2" style="font-size:11px;">Incluye productos del pedido</div>
         </div>
+        <div class="value">{{ total|cop }}</div>
+      </div>
+
+      <div class="line"></div>
+
+      <div class="center">
+        <div class="bold">¡Gracias por tu visita! 🙌</div>
+        <div class="muted2" style="font-size: 11px;">Vuelve pronto</div>
+      </div>
+
+      <!-- ✅ MENSAJES DE ERROR -->
+      {% if error == "pago_insuficiente" %}
+        <div class="msg-error">❌ El efectivo recibido no alcanza el total.</div>
+      {% elif error == "metodo_invalido" %}
+        <div class="msg-error">❌ Selecciona un método de pago válido.</div>
       {% endif %}
 
-      <button class="btn" type="button" onclick="window.print()">🖨️ Imprimir</button>
-      <a class="btn" href="{{ url_for('admin_panel') }}">↩️ Volver</a>
+      <div class="actions">
+
+        {% if pedido.estado != "cerrado" %}
+          <form method="POST"
+                action="{{ url_for('cobrar_pedido', pedido_id=pedido.id) }}"
+                style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; width:100%;">
+
+            <select class="btn amber" name="metodo_pago" id="metodo_pago" required>
+              <option value="">Método de pago</option>
+              <option value="efectivo">Efectivo</option>
+              <option value="transferencia">Transferencia</option>
+              <option value="tarjeta">Tarjeta</option>
+            </select>
+
+            <input class="btn"
+                   type="number"
+                   name="monto_recibido"
+                   id="monto_recibido"
+                   placeholder="Recibido (solo efectivo)"
+                   step="0.01"
+                   style="display:none;">
+
+            <button class="btn green" type="submit">💳 Cobrar e imprimir</button>
+          </form>
+        {% else %}
+          <div class="msg-ok">
+            ✅ Pedido pagado
+            {% if pedido.metodo_pago %}
+              ({{ pedido.metodo_pago }})
+            {% endif %}
+            {% if pedido.cambio is not none and pedido.metodo_pago == "efectivo" %}
+              | Cambio: {{ pedido.cambio|cop }}
+            {% endif %}
+          </div>
+        {% endif %}
+
+        <button class="btn blue" type="button" onclick="window.print()">🖨️ Imprimir</button>
+        <a class="btn red" href="{{ url_for('admin_panel') }}">↩️ Volver</a>
+      </div>
     </div>
   </div>
 
@@ -215,11 +349,8 @@
 
   {% if auto_print %}
   <script>
-    window.onload = () => {
-      window.print();
-    };
+    window.onload = () => window.print();
   </script>
   {% endif %}
-
 </body>
 </html>

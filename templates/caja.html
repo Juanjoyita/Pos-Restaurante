@@ -4,271 +4,521 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Caja - {{ dia }}</title>
+
   <style>
-    body { font-family: Arial, sans-serif; padding: 16px; }
-    .topbar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-    .card { border:1px solid #ddd; padding:12px; border-radius:8px; margin:10px 0; }
-    .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:10px; }
-    table { width:100%; border-collapse: collapse; margin-top: 8px; }
-    th, td { border-bottom: 1px solid #eee; padding: 8px; text-align:left; }
-    th { background:#fafafa; }
-    .right { text-align:right; }
-    .muted { color:#666; font-size: 12px; }
-    a.btn, button.btn {
-      border:1px solid #333; background:#eee; padding:10px 12px; border-radius:6px;
-      text-decoration:none; color:#000; cursor:pointer;
+    :root{
+      --bg:#0b1220;
+      --card: rgba(255,255,255,.04);
+      --card2: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.12);
+      --text:#e8eefc;
+      --muted: rgba(232,238,252,.7);
+
+      /* 🔥 fuego / asados */
+      --ember: rgba(249,115,22,.12);
+      --emberB: rgba(249,115,22,.35);
+      --red: rgba(239,68,68,.12);
+      --redB: rgba(239,68,68,.30);
+      --green: rgba(34,197,94,.10);
+      --greenB: rgba(34,197,94,.30);
+      --blue: rgba(59,130,246,.10);
+      --blueB: rgba(59,130,246,.30);
+
+      --shadow: rgba(0,0,0,.45);
+      --radius: 16px;
     }
-    input { padding:10px 12px; border-radius:6px; border:1px solid #ccc; }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: Arial, sans-serif;
+      padding: 16px;
+      color: var(--text);
+      background:
+        radial-gradient(900px 520px at 15% 10%, rgba(249,115,22,.18), transparent 55%),
+        radial-gradient(900px 520px at 85% 10%, rgba(239,68,68,.14), transparent 55%),
+        radial-gradient(900px 520px at 50% 95%, rgba(245,158,11,.10), transparent 55%),
+        var(--bg);
+    }
+
+    a{ color: var(--text); text-decoration:none; }
+    h1,h2,h3{ margin:0; }
+    .wrap{ width:min(1100px, 100%); margin:0 auto; }
+
+    /* Topbar */
+    .topbar{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-bottom: 14px;
+    }
+    .title{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+    .badge{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(249,115,22,.35);
+      background: rgba(249,115,22,.12);
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing:.2px;
+      color: var(--text);
+    }
+
+    /* Buttons */
+    .btnrow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      cursor:pointer;
+      font-weight: 900;
+      transition: transform .06s ease, filter .15s ease, border-color .15s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{ transform: translateY(-1px); filter: brightness(1.06); }
+    .btn:active{ transform: translateY(0px); }
+
+    .btn.blue{ border-color: var(--blueB); background: var(--blue); }
+    .btn.ember{ border-color: var(--emberB); background: var(--ember); }
+    .btn.red{ border-color: var(--redB); background: var(--red); }
+
+    /* Cards */
+    .card{
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--card2), var(--card));
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: 0 22px 60px var(--shadow);
+      margin: 12px 0;
+    }
+
+    /* Summary grid */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .stat{
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      border-radius: 14px;
+      padding: 12px;
+      position:relative;
+      overflow:hidden;
+    }
+    .stat::after{
+      content:"";
+      position:absolute;
+      inset:-40% -40% auto auto;
+      width:220px;
+      height:220px;
+      background: radial-gradient(circle, rgba(249,115,22,.18), transparent 60%);
+      pointer-events:none;
+      transform: rotate(12deg);
+    }
+    .muted{ color: var(--muted); font-size: 12px; font-weight:800; }
+    .metric{ font-size: 24px; font-weight: 900; margin-top: 4px; letter-spacing:.2px; }
+    .mini{ font-size:12px; color:rgba(232,238,252,.72); font-weight:800; margin-top:6px; }
+
+    /* Pills */
+    .pill{
+      display:inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      color: rgba(232,238,252,.85);
+      font-weight: 900;
+    }
+
+    /* Forms */
+    .formRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:end;
+      justify-content:space-between;
+    }
+    .controls{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:end;
+    }
+    .control{
+      display:grid;
+      gap:6px;
+      min-width: 170px;
+    }
+    select, input[type="date"], input[type="text"]{
+      padding:10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      outline:none;
+      font-weight: 900;
+    }
+    select option{ color:#111; }
+    .search{
+      min-width: 240px;
+    }
+
+    /* Table */
+    .tableWrap{
+      overflow:auto;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.12);
+      margin-top:10px;
+    }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+    th, td{
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      text-align:left;
+      font-size: 13px;
+      vertical-align: middle;
+    }
+    th{
+      background: rgba(255,255,255,.06);
+      font-weight: 900;
+      color: rgba(232,238,252,.92);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    tr:hover td{ background: rgba(255,255,255,.03); }
+    .right{ text-align:right; }
+
+    /* Metodo cards */
+    .methodGrid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .method{
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      border-radius: 14px;
+      padding: 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .method .icon{
+      width:38px; height:38px; border-radius: 12px;
+      display:grid; place-items:center;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      font-size: 18px;
+    }
+    .method .val{
+      font-weight: 900;
+      font-size: 18px;
+      text-align:right;
+      white-space:nowrap;
+    }
+
+    .sectionHead{
+      display:flex; justify-content:space-between; align-items:end; gap:10px; flex-wrap:wrap;
+    }
+
+    .note{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(249,115,22,.22);
+      background: rgba(249,115,22,.08);
+      color: rgba(232,238,252,.90);
+      font-weight: 800;
+      font-size: 12px;
+    }
+
+    @media (max-width: 760px){
+      table{ min-width: 640px; }
+      .search{ min-width: 200px; }
+    }
   </style>
 </head>
+
 <body>
+  <div class="wrap">
 
-  <div class="topbar">
-    <h1 style="margin:0;">📊 Caja del día</h1>
-    <a class="btn" href="{{ url_for('admin_panel') }}">↩️ Volver</a>
-    <a class="btn" href="{{ url_for('logout') }}">Cerrar sesión</a>
+    <!-- TOP -->
+    <div class="topbar">
+      <div class="title">
+        <h1>📊 Caja</h1>
+        <span class="badge">🔥 Rancho27 · Reportes</span>
+      </div>
 
-    <form method="GET" action="{{ url_for('caja_dia') }}" style="display:flex; gap:8px; align-items:center;">
-  <label class="muted">Fecha:</label>
-
-  <select name="fecha" style="padding:10px 12px; border-radius:6px; border:1px solid #ccc;">
-    {% for f in fechas_disponibles %}
-      <option value="{{ f }}" {% if f == dia|string %}selected{% endif %}>
-        {{ f }}
-      </option>
-    {% endfor %}
-  </select>
-
-  <button class="btn" type="submit">Ver</button>
-</form>
-
-  </div>
-
-  <div class="card grid">
-    <div>
-      <div class="muted">Fecha</div>
-      <div><b>{{ dia }}</b></div>
+      <div class="btnrow">
+        <a class="btn" href="{{ url_for('admin_panel') }}">↩️ Volver</a>
+        <a class="btn red" href="{{ url_for('logout') }}">🚪 Cerrar sesión</a>
+      </div>
     </div>
-    <div>
-      <div class="muted">Total vendido</div>
-      <div><b>{{ total_dia|cop }}</b></div>
-    </div>
-    <div>
-      <div class="muted">Pedidos cobrados</div>
-      <div><b>{{ conteo }}</b></div>
-    </div>
-    <div>
-      <div class="muted">Ticket promedio</div>
-      <div><b>{{ ticket_promedio|cop }}</b></div>
-    </div>
-  </div>
 
-  <div class="card">
-    <h2 style="margin-top:0;">💳 Ventas por método de pago</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Método</th>
-          <th class="right">Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>Efectivo</td><td class="right">{{ por_metodo["efectivo"]|cop }}</td></tr>
-        <tr><td>Transferencia</td><td class="right">{{ por_metodo["transferencia"]|cop }}</td></tr>
-        <tr><td>Tarjeta</td><td class="right">{{ por_metodo["tarjeta"]|cop }}</td></tr>
-        <tr><td>Otro</td><td class="right">{{ por_metodo["otro"]|cop }}</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <div class="card">
-    <h2 style="margin-top:0;">🧾 Pedidos cobrados ({{ dia }})</h2>
-    {% if pedidos_info|length == 0 %}
-      <p>No hay pedidos cobrados en esta fecha.</p>
-    {% else %}
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Mesa</th>
-            <th>Hora</th>
-            <th>Método</th>
-            <th class="right">Total</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for p in pedidos_info %}
-          <tr>
-            <td>#{{ p.id }}</td>
-            <td>{{ p.mesa }}</td>
-            <td>{{ p.hora }}</td>
-            <td>{{ p.metodo }}</td>
-            <td class="right">{{ p.total|cop }}</td>
-            <td><a class="btn" href="{{ url_for('ver_factura', pedido_id=p.id) }}">Ver</a></td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% endif %}
-  </div>
-
-  <div class="card">
-    <h2 style="margin-top:0;">🔥 Top productos (por ventas)</h2>
-    {% if top_lista|length == 0 %}
-      <p>No hay productos (aún).</p>
-    {% else %}
-      <table>
-        <thead>
-          <tr>
-            <th>Producto</th>
-            <th class="right">Cantidad</th>
-            <th class="right">Ventas</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for t in top_lista %}
-          <tr>
-            <td>{{ t.nombre }}</td>
-            <td class="right">{{ t.cantidad }}</td>
-            <td class="right">{{ t.ventas|cop }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    {% endif %}
-
+    <!-- Selector -->
     <div class="card">
-  <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:end;">
-    <div>
-      <h2 style="margin:0;">📊 Ventas</h2>
-      <div class="muted" id="txtPromedio" style="margin-top:4px;"></div>
+      <div class="formRow">
+        <div>
+          <h2 style="font-size:16px; font-weight:900;">Caja del día</h2>
+          <div class="muted">Elige una fecha con pedidos cobrados</div>
+        </div>
+
+        <form method="GET" action="{{ url_for('caja_dia') }}" class="controls">
+          <div class="control" style="min-width:220px;">
+            <div class="muted">Fecha</div>
+            <select name="fecha">
+              {% for f in fechas_disponibles %}
+                <option value="{{ f }}" {% if f == dia|string %}selected{% endif %}>{{ f }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button class="btn ember" type="submit">Ver 🔎</button>
+        </form>
+      </div>
+
+      <div class="note">
+        Tip: Si quieres revisar un día específico, cambia la fecha y dale “Ver”. Los totales se actualizan al instante.
+      </div>
     </div>
 
-    <form id="filtroGrafica" style="display:flex; gap:8px; flex-wrap:wrap; align-items:end;">
-      <div>
-        <div class="muted">Vista</div>
-        <select id="granularity" style="padding:10px 12px; border-radius:6px; border:1px solid #ccc;">
-          <option value="day">Diario</option>
-          <option value="month">Mensual</option>
-        </select>
+    <!-- RESUMEN -->
+    <div class="card">
+      <div class="grid">
+        <div class="stat">
+          <div class="muted">Fecha</div>
+          <div class="metric">{{ dia }}</div>
+          <div class="mini">Cierre de caja del día</div>
+        </div>
+        <div class="stat">
+          <div class="muted">Total vendido</div>
+          <div class="metric">{{ total_dia|cop }}</div>
+          <div class="mini">Ventas cobradas</div>
+        </div>
+        <div class="stat">
+          <div class="muted">Pedidos cobrados</div>
+          <div class="metric">{{ conteo }}</div>
+          <div class="mini">Cantidad de tickets</div>
+        </div>
+        <div class="stat">
+          <div class="muted">Ticket promedio</div>
+          <div class="metric">{{ ticket_promedio|cop }}</div>
+          <div class="mini">Promedio por pedido</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MÉTODOS DE PAGO -->
+    <div class="card">
+      <div class="sectionHead">
+        <div>
+          <h2 style="font-size:16px; font-weight:900;">💳 Ventas por método</h2>
+          <div class="muted">Distribución del total por forma de pago</div>
+        </div>
+        <span class="pill">Total: {{ total_dia|cop }}</span>
       </div>
 
-      <div>
-        <div class="muted">Desde</div>
-        <input id="fromDate" type="date" style="padding:10px 12px; border-radius:6px; border:1px solid #ccc;">
+      <div class="methodGrid">
+        <div class="method">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="icon">💵</div>
+            <div>
+              <div style="font-weight:900;">Efectivo</div>
+              <div class="muted">Pagos en caja</div>
+            </div>
+          </div>
+          <div class="val">{{ por_metodo["efectivo"]|cop }}</div>
+        </div>
+
+        <div class="method">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="icon">🏦</div>
+            <div>
+              <div style="font-weight:900;">Transferencia</div>
+              <div class="muted">Nequi / Bancolombia</div>
+            </div>
+          </div>
+          <div class="val">{{ por_metodo["transferencia"]|cop }}</div>
+        </div>
+
+        <div class="method">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="icon">💳</div>
+            <div>
+              <div style="font-weight:900;">Tarjeta</div>
+              <div class="muted">Datáfono</div>
+            </div>
+          </div>
+          <div class="val">{{ por_metodo["tarjeta"]|cop }}</div>
+        </div>
+
+        <div class="method">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="icon">➕</div>
+            <div>
+              <div style="font-weight:900;">Otro</div>
+              <div class="muted">Casos especiales</div>
+            </div>
+          </div>
+          <div class="val">{{ por_metodo["otro"]|cop }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PEDIDOS COBRADOS -->
+    <div class="card">
+      <div class="sectionHead">
+        <div>
+          <h2 style="font-size:16px; font-weight:900;">🧾 Pedidos cobrados</h2>
+          <div class="muted">Listado del día {{ dia }}</div>
+        </div>
+
+        <div class="controls">
+          <div class="control search">
+            <div class="muted">Buscar</div>
+            <input id="qPedidos" type="text" placeholder="Ej: mesa 3, tarjeta, #12">
+          </div>
+          <span class="pill" id="countPedidos">{{ conteo }} pedidos</span>
+        </div>
       </div>
 
-      <div>
-        <div class="muted">Hasta</div>
-        <input id="toDate" type="date" style="padding:10px 12px; border-radius:6px; border:1px solid #ccc;">
+      {% if pedidos_info|length == 0 %}
+        <div class="muted" style="margin-top:10px;">No hay pedidos cobrados en esta fecha.</div>
+      {% else %}
+        <div class="tableWrap">
+          <table id="tablaPedidos">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Mesa</th>
+                <th>Hora</th>
+                <th>Método</th>
+                <th class="right">Total</th>
+                <th class="right">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in pedidos_info %}
+              <tr>
+                <td><b>#{{ p.id }}</b></td>
+                <td><span class="pill">Mesa {{ p.mesa }}</span></td>
+                <td>{{ p.hora }}</td>
+                <td>{{ p.metodo }}</td>
+                <td class="right"><b>{{ p.total|cop }}</b></td>
+                <td class="right">
+                  <a class="btn blue" href="{{ url_for('ver_factura', pedido_id=p.id) }}">🧾 Ver</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- TOP PRODUCTOS -->
+    <div class="card">
+      <div class="sectionHead">
+        <div>
+          <h2 style="font-size:16px; font-weight:900;">🔥 Top productos</h2>
+          <div class="muted">Ranking por ventas</div>
+        </div>
+
+        <div class="controls">
+          <div class="control search">
+            <div class="muted">Buscar</div>
+            <input id="qTop" type="text" placeholder="Ej: churrasco, costilla...">
+          </div>
+          <span class="pill" id="countTop">Top 10</span>
+        </div>
       </div>
 
-      <button class="btn" type="submit">Aplicar</button>
-      <button class="btn" id="btnReset" type="button">Reset</button>
-    </form>
+      {% if top_lista|length == 0 %}
+        <div class="muted" style="margin-top:10px;">No hay productos (aún).</div>
+      {% else %}
+        <div class="tableWrap">
+          <table id="tablaTop">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th class="right">Cantidad</th>
+                <th class="right">Ventas</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for t in top_lista %}
+              <tr>
+                <td><b>{{ t.nombre }}</b></td>
+                <td class="right">{{ t.cantidad }}</td>
+                <td class="right"><b>{{ t.ventas|cop }}</b></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endif %}
+    </div>
+
   </div>
 
-  <div style="margin-top:12px;">
-    <canvas id="chartVentas" height="110"></canvas>
-  </div>
-</div>
+  <script>
+    function attachSearch(inputId, tableId, counterId, baseText){
+      const input = document.getElementById(inputId);
+      const table = document.getElementById(tableId);
+      const counter = document.getElementById(counterId);
+      if(!input || !table) return;
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  let chartRef = null;
+      const rows = Array.from(table.querySelectorAll("tbody tr"));
+      const total = rows.length;
 
-  function moneyCO(v){
-    return "$" + Math.round(v).toLocaleString("es-CO");
-  }
+      function update(){
+        const q = (input.value || "").toLowerCase().trim();
+        let shown = 0;
 
-  function buildParams(){
-    const gran = document.getElementById("granularity").value;
-    const from = document.getElementById("fromDate").value;
-    const to = document.getElementById("toDate").value;
+        rows.forEach(r => {
+          const txt = r.innerText.toLowerCase();
+          const ok = txt.includes(q);
+          r.style.display = ok ? "" : "none";
+          if(ok) shown++;
+        });
 
-    const params = new URLSearchParams();
-    params.set("granularity", gran);
-    if (from) params.set("from", from);
-    if (to) params.set("to", to);
-    return params.toString();
-  }
-
-  async function cargarGrafica(){
-    const qs = buildParams();
-    const res = await fetch(`/admin/caja/resumen.json?${qs}`, { cache: "no-store" });
-    if (!res.ok) {
-      document.getElementById("txtPromedio").textContent = "No se pudo cargar la gráfica.";
-      return;
-    }
-
-    const data = await res.json();
-    const labels = data.labels || [];
-    const values = data.values || [];
-    const promedio = data.promedio || 0;
-
-    const gran = document.getElementById("granularity").value;
-    document.getElementById("txtPromedio").textContent =
-      (values.length ? `Promedio ${gran === "month" ? "mensual" : "diario"}: ${moneyCO(promedio)}` : "Sin datos en el rango.");
-
-    const ctx = document.getElementById("chartVentas");
-    if (!ctx) return;
-
-    // destruir si ya existe
-    if (chartRef) {
-      chartRef.destroy();
-      chartRef = null;
-    }
-
-    chartRef = new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels,
-        datasets: [{
-          label: gran === "month" ? "Ventas mensuales" : "Ventas diarias",
-          data: values,
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: true },
-          tooltip: {
-            callbacks: {
-              label: (c) => `${c.dataset.label}: ${moneyCO(c.raw)}`
-            }
-          }
-        },
-        scales: {
-          y: {
-            ticks: {
-              callback: (v) => moneyCO(v)
-            }
-          }
+        if(counter){
+          counter.textContent = q
+            ? `Mostrando ${shown} de ${total}`
+            : baseText;
         }
       }
-    });
-  }
 
-  // eventos
-  document.getElementById("filtroGrafica").addEventListener("submit", (e) => {
-    e.preventDefault();
-    cargarGrafica();
-  });
+      input.addEventListener("input", update);
+      update();
+    }
 
-  document.getElementById("btnReset").addEventListener("click", () => {
-    document.getElementById("fromDate").value = "";
-    document.getElementById("toDate").value = "";
-    document.getElementById("granularity").value = "day";
-    cargarGrafica();
-  });
-
-  // cargar al abrir
-  cargarGrafica();
-</script>
-
-  </div>
+    attachSearch("qPedidos", "tablaPedidos", "countPedidos", "{{ conteo }} pedidos");
+    attachSearch("qTop", "tablaTop", "countTop", "Top 10");
+  </script>
 
 </body>
 </html>

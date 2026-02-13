@@ -3,77 +3,307 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin - Productos</title>
+  <title>Productos - Rancho27</title>
+
   <style>
-    body{font-family:Arial,sans-serif; padding:16px;}
-    .top{display:flex; gap:12px; align-items:center; flex-wrap:wrap;}
-    table{width:100%; border-collapse:collapse; margin-top:14px;}
-    th,td{border:1px solid #ddd; padding:10px; text-align:left;}
-    th{background:#f4f4f4;}
-    .badge{padding:4px 10px; border-radius:999px; font-size:12px; display:inline-block;}
-    .on{background:#e8fff0; color:#126b2f; border:1px solid #b9f5cd;}
-    .off{background:#fff0f0; color:#8a1c1c; border:1px solid #ffd0d0;}
-    .btn{padding:8px 10px; border:1px solid #333; background:#eee; cursor:pointer; border-radius:6px;}
-    a.btn{text-decoration:none; color:#000; display:inline-block;}
-    .row-actions{display:flex; gap:8px; flex-wrap:wrap;}
-    input{padding:8px; border-radius:6px; border:1px solid #ccc;}
+    :root{
+      --bg:#0b1220;
+      --card: rgba(255,255,255,.04);
+      --card2: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.12);
+      --text:#e8eefc;
+      --muted: rgba(232,238,252,.7);
+
+      /* 🔥 Rancho27 */
+      --ember: rgba(249,115,22,.12);
+      --emberB: rgba(249,115,22,.35);
+      --green: rgba(34,197,94,.12);
+      --greenB: rgba(34,197,94,.35);
+      --red: rgba(239,68,68,.12);
+      --redB: rgba(239,68,68,.35);
+      --blue: rgba(59,130,246,.12);
+      --blueB: rgba(59,130,246,.35);
+
+      --shadow: rgba(0,0,0,.45);
+      --radius: 16px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 520px at 15% 10%, rgba(249,115,22,.18), transparent 55%),
+        radial-gradient(900px 520px at 85% 10%, rgba(239,68,68,.14), transparent 55%),
+        radial-gradient(900px 520px at 50% 95%, rgba(245,158,11,.10), transparent 55%),
+        var(--bg);
+      padding: 16px;
+    }
+
+    a{ text-decoration:none; color: var(--text); }
+    .wrap{ width:min(1100px, 100%); margin:0 auto; }
+
+    /* Header */
+    .topbar{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      margin-bottom: 14px;
+    }
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--emberB);
+      background: var(--ember);
+      font-weight:900;
+      font-size:12px;
+      width: fit-content;
+    }
+    .muted{ color: var(--muted); font-size:12px; font-weight:800; }
+
+    /* Buttons */
+    .btnrow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      cursor:pointer;
+      font-weight:900;
+      transition: transform .06s ease, filter .15s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{ transform: translateY(-1px); filter: brightness(1.06); }
+    .btn:active{ transform: translateY(0px); }
+
+    .btn.blue{ border-color: var(--blueB); background: var(--blue); }
+    .btn.ember{ border-color: var(--emberB); background: var(--ember); }
+    .btn.green{ border-color: var(--greenB); background: var(--green); }
+    .btn.red{ border-color: var(--redB); background: var(--red); }
+
+    /* Card */
+    .card{
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--card2), var(--card));
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: 0 22px 60px var(--shadow);
+    }
+
+    /* Search */
+    .search{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      margin-top: 10px;
+    }
+    .searchBox{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      width: 100%;
+    }
+    .input{
+      flex: 1;
+      min-width: 220px;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      font-weight: 900;
+      outline: none;
+      transition: .15s;
+    }
+    .input:focus{
+      border-color: var(--emberB);
+      box-shadow: 0 0 0 2px rgba(249,115,22,.15);
+    }
+    .input::placeholder{ color: rgba(232,238,252,.35); }
+
+    /* Table */
+    .tableWrap{
+      margin-top: 14px;
+      overflow:auto;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.12);
+    }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      min-width: 780px;
+    }
+    th, td{
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      text-align:left;
+      font-size: 13px;
+      vertical-align: middle;
+    }
+    th{
+      background: rgba(255,255,255,.06);
+      font-weight: 900;
+      color: rgba(232,238,252,.92);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    tr:hover td{ background: rgba(255,255,255,.03); }
+
+    .right{ text-align:right; }
+
+    /* Pills */
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 900;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      color: rgba(232,238,252,.85);
+      white-space:nowrap;
+    }
+    .dot{ width:10px; height:10px; border-radius:999px; background: rgba(232,238,252,.45); }
+    .pill.on{ border-color: var(--greenB); background: var(--green); }
+    .pill.on .dot{ background: rgba(34,197,94,.95); }
+    .pill.off{ border-color: var(--redB); background: var(--red); }
+    .pill.off .dot{ background: rgba(239,68,68,.95); }
+
+    .price{
+      font-weight: 900;
+      letter-spacing: .2px;
+    }
+
+    .actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      align-items:center;
+    }
+    form{ margin:0; }
+
+    /* Empty */
+    .empty{
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-weight: 900;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 720px){
+      table{ min-width: 700px; }
+    }
   </style>
 </head>
+
 <body>
+  <div class="wrap">
 
-  <div class="top">
-    <h2 style="margin:0;">📦 Productos</h2>
-    <a class="btn" href="{{ url_for('admin_panel') }}">↩️ Volver</a>
-    <a class="btn" href="{{ url_for('admin_producto_nuevo') }}">➕ Nuevo producto</a>
+    <!-- TOP -->
+    <div class="topbar">
+      <div class="title">
+        <h1 style="margin:0;">📦 Productos</h1>
+        <div class="badge">🔥 Rancho27 · Inventario</div>
+        <div class="muted">Activa / desactiva productos del menú para el mesero</div>
+      </div>
 
-    <form method="GET" action="{{ url_for('admin_productos') }}" style="display:flex; gap:8px; align-items:center;">
-      <input type="text" name="q" value="{{ q }}" placeholder="Buscar producto..." />
-      <button class="btn" type="submit">Buscar</button>
-    </form>
-  </div>
+      <div class="btnrow">
+        <a class="btn" href="{{ url_for('admin_panel') }}">↩️ Volver</a>
+        <a class="btn blue" href="{{ url_for('admin_producto_nuevo') }}">➕ Nuevo producto</a>
+      </div>
+    </div>
 
-  {% if productos|length == 0 %}
-    <p style="margin-top:16px;">No hay productos.</p>
-  {% else %}
-    <table>
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Precio</th>
-          <th>Estado</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for p in productos %}
-          <tr>
-            <td><b>{{ p.nombre }}</b></td>
-            <td>${{ p.precio|round|int }}</td>
-            <td>
-              {% if p.activo %}
-                <span class="badge on">Disponible</span>
-              {% else %}
-                <span class="badge off">No disponible</span>
-              {% endif %}
-            </td>
-            <td>
-              <div class="row-actions">
-                <a class="btn" href="{{ url_for('admin_producto_editar', producto_id=p.id) }}">✏️ Editar</a>
+    <!-- SEARCH -->
+    <div class="card">
+      <form method="GET" action="{{ url_for('admin_productos') }}" class="searchBox">
+        <input class="input" type="text" name="q" value="{{ q }}" placeholder="Buscar producto... (ej: costilla, chorizo, limonada)" />
+        <button class="btn ember" type="submit">🔎 Buscar</button>
+        {% if q %}
+          <a class="btn" href="{{ url_for('admin_productos') }}">✖ Limpiar</a>
+        {% endif %}
+      </form>
+    </div>
 
-                <form method="POST" action="{{ url_for('admin_producto_toggle', producto_id=p.id) }}">
+    <!-- TABLE -->
+    {% if productos|length == 0 %}
+      <div class="empty">No hay productos para mostrar.</div>
+    {% else %}
+      <div class="card" style="margin-top:12px;">
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th class="right">Precio</th>
+                <th>Estado</th>
+                <th class="right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in productos %}
+              <tr>
+                <td><b>{{ p.nombre }}</b></td>
+                <td class="right price">{{ p.precio|cop }}</td>
+                <td>
                   {% if p.activo %}
-                    <button class="btn" type="submit">🚫 Desactivar</button>
+                    <span class="pill on"><span class="dot"></span> Disponible</span>
                   {% else %}
-                    <button class="btn" type="submit">✅ Activar</button>
+                    <span class="pill off"><span class="dot"></span> No disponible</span>
                   {% endif %}
-                </form>
-              </div>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% endif %}
+                </td>
+                <td class="right">
+                  <div class="actions">
+                    <a class="btn" href="{{ url_for('admin_producto_editar', producto_id=p.id) }}">✏️ Editar</a>
 
+                    <form method="POST" action="{{ url_for('admin_producto_toggle', producto_id=p.id) }}">
+                      {% if p.activo %}
+                        <button class="btn red" type="submit">🚫 Desactivar</button>
+                      {% else %}
+                        <button class="btn green" type="submit">✅ Activar</button>
+                      {% endif %}
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="muted" style="margin-top:10px;">
+          Tip: desactiva productos agotados para que no aparezcan en el menú del mesero.
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
 </body>
 </html>

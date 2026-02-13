@@ -3,42 +3,248 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Nuevo mesero</title>
+  <title>Nuevo mesero - Rancho27</title>
+
   <style>
-    body { font-family: Arial, sans-serif; padding: 16px; }
-    .card { border:1px solid #ddd; padding: 16px; border-radius: 8px; max-width: 420px; }
-    label { display:block; margin-top: 10px; font-weight: bold; }
-    input { width:100%; padding:10px 12px; border-radius:6px; border:1px solid #ccc; margin-top: 6px; }
-    .row { display:flex; gap:10px; margin-top: 12px; }
-    a.btn, button.btn {
-      border:1px solid #333; background:#eee; padding:10px 12px; border-radius:6px;
-      text-decoration:none; color:#000; cursor:pointer;
+    :root{
+      --bg:#0b1220;
+      --card: rgba(255,255,255,.04);
+      --card2: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.12);
+      --text:#e8eefc;
+      --muted: rgba(232,238,252,.7);
+
+      /* 🔥 Rancho27 */
+      --ember: rgba(249,115,22,.12);
+      --emberB: rgba(249,115,22,.35);
+      --green: rgba(34,197,94,.12);
+      --greenB: rgba(34,197,94,.35);
+      --red: rgba(239,68,68,.12);
+      --redB: rgba(239,68,68,.35);
+
+      --shadow: rgba(0,0,0,.45);
+      --radius: 16px;
     }
-    .error { color:#b00020; font-weight:bold; margin-top: 8px; }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 520px at 15% 10%, rgba(249,115,22,.18), transparent 55%),
+        radial-gradient(900px 520px at 85% 10%, rgba(239,68,68,.14), transparent 55%),
+        radial-gradient(900px 520px at 50% 95%, rgba(245,158,11,.10), transparent 55%),
+        var(--bg);
+      padding: 16px;
+    }
+
+    .wrap{
+      width:min(460px, 100%);
+      margin:0 auto;
+    }
+
+    a{ text-decoration:none; color:var(--text); }
+
+    /* Topbar */
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:14px;
+      flex-wrap:wrap;
+    }
+
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--emberB);
+      background: var(--ember);
+      font-weight:900;
+      font-size:12px;
+    }
+
+    .muted{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:800;
+    }
+
+    /* Card */
+    .card{
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, var(--card2), var(--card));
+      border-radius: var(--radius);
+      padding:18px;
+      box-shadow: 0 22px 60px var(--shadow);
+    }
+
+    /* Form */
+    label{
+      display:block;
+      margin-top:14px;
+      font-size:13px;
+      font-weight:900;
+      color:var(--muted);
+    }
+
+    input{
+      width:100%;
+      margin-top:6px;
+      padding:12px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      font-weight:900;
+      outline:none;
+      transition:.15s;
+    }
+
+    input:focus{
+      border-color: var(--emberB);
+      box-shadow: 0 0 0 2px rgba(249,115,22,.15);
+    }
+
+    input::placeholder{
+      color: rgba(232,238,252,.35);
+    }
+
+    /* Buttons */
+    .btnrow{
+      display:flex;
+      gap:10px;
+      margin-top:18px;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      display:inline-flex;
+      justify-content:center;
+      align-items:center;
+      gap:8px;
+      padding:12px 14px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      font-weight:900;
+      cursor:pointer;
+      transition:.15s;
+      flex:1;
+    }
+
+    .btn:hover{
+      transform: translateY(-1px);
+      filter: brightness(1.06);
+    }
+
+    .btn.primary{
+      border-color: var(--greenB);
+      background: var(--green);
+    }
+
+    .btn.cancel{
+      border-color: var(--redB);
+      background: var(--red);
+    }
+
+    /* Error */
+    .error{
+      margin-top:10px;
+      padding:10px;
+      border-radius:12px;
+      border:1px solid var(--redB);
+      background: rgba(239,68,68,.12);
+      font-weight:900;
+      font-size:13px;
+    }
+
+    /* Hint */
+    .hint{
+      margin-top:12px;
+      padding:10px;
+      border-radius:12px;
+      border:1px solid var(--emberB);
+      background: rgba(249,115,22,.10);
+      font-size:12px;
+      font-weight:900;
+      color:var(--muted);
+    }
+
   </style>
 </head>
+
 <body>
 
-  <a class="btn" href="{{ url_for('admin_usuarios') }}">↩️ Volver</a>
-  <h1>➕ Crear mesero</h1>
+  <div class="wrap">
 
-  <div class="card">
-    {% if error %}
-      <div class="error">❌ {{ error }}</div>
-    {% endif %}
-
-    <form method="POST">
-      <label>Usuario</label>
-      <input name="username" placeholder="ej: mesero2" required>
-
-      <label>Contraseña</label>
-      <input name="password" type="password" placeholder="mínimo 6 caracteres" required>
-
-      <div class="row">
-        <button class="btn" type="submit">✅ Crear</button>
-        <a class="btn" href="{{ url_for('admin_usuarios') }}">Cancelar</a>
+    <!-- TOP -->
+    <div class="topbar">
+      <div class="title">
+        <h1 style="margin:0;">➕ Crear mesero</h1>
+        <span class="badge">🔥 Rancho27 · Administración</span>
       </div>
-    </form>
+
+      <a class="btn" href="{{ url_for('admin_usuarios') }}">↩️ Volver</a>
+    </div>
+
+    <!-- CARD -->
+    <div class="card">
+
+      {% if error %}
+        <div class="error">❌ {{ error }}</div>
+      {% endif %}
+
+      <form method="POST">
+
+        <label>Usuario</label>
+        <input
+          name="username"
+          placeholder="Ej: mesero2"
+          minlength="3"
+          required
+          autofocus
+        >
+
+        <label>Contraseña</label>
+        <input
+          name="password"
+          type="password"
+          placeholder="Mínimo 6 caracteres"
+          minlength="6"
+          required
+        >
+
+        <div class="hint">
+          Tip: usa un nombre corto y fácil de recordar para el mesero.
+        </div>
+
+        <div class="btnrow">
+          <button class="btn primary" type="submit">
+            ✅ Crear mesero
+          </button>
+
+          <a class="btn cancel" href="{{ url_for('admin_usuarios') }}">
+            Cancelar
+          </a>
+        </div>
+
+      </form>
+
+    </div>
+
   </div>
 
 </body>

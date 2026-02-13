@@ -4,128 +4,305 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin - Panel</title>
+
   <style>
-    body{font-family:Arial,sans-serif; padding:16px; background:#0b1220; color:#e8eefc;}
-    a{color:#e8eefc; text-decoration:none;}
-    .top{display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between;}
-    .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; margin-top:14px;}
-    .card{
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.04);
-      border-radius:16px;
-      padding:14px;
+    :root{
+      --bg:#0b1220;
+      --card: rgba(255,255,255,.04);
+      --card2: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.12);
+      --text:#e8eefc;
+      --muted: rgba(232,238,252,.7);
+
+      /* 🔥 Rancho27 / asados */
+      --ember: rgba(249,115,22,.12);
+      --emberB: rgba(249,115,22,.35);
+      --blue: rgba(59,130,246,.10);
+      --blueB: rgba(59,130,246,.30);
+      --green: rgba(34,197,94,.10);
+      --greenB: rgba(34,197,94,.30);
+      --red: rgba(239,68,68,.10);
+      --redB: rgba(239,68,68,.30);
+      --warn: rgba(245,158,11,.12);
+      --warnB: rgba(245,158,11,.35);
+
+      --shadow: rgba(0,0,0,.45);
+      --radius: 16px;
     }
-    .card h3{margin:0 0 8px 0; font-size:16px;}
-    .metric{font-size:26px; font-weight:900;}
-    .muted{color:rgba(232,238,252,.7); font-size:12px;}
-    .btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;}
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 520px at 15% 10%, rgba(249,115,22,.18), transparent 55%),
+        radial-gradient(900px 520px at 85% 10%, rgba(239,68,68,.14), transparent 55%),
+        radial-gradient(900px 520px at 50% 95%, rgba(245,158,11,.10), transparent 55%),
+        var(--bg);
+      padding: 16px;
+    }
+
+    a{ color: var(--text); text-decoration:none; }
+    h1,h2,h3{ margin:0; }
+
+    .wrap{ width:min(1100px, 100%); margin:0 auto; }
+
+    /* Topbar */
+    .topbar{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-bottom: 14px;
+    }
+
+    .title{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(249,115,22,.35);
+      background: rgba(249,115,22,.12);
+      font-weight: 900;
+      font-size: 12px;
+      letter-spacing:.2px;
+      color: var(--text);
+    }
+
+    .muted{ color: var(--muted); font-size: 12px; font-weight:800; }
+
+    /* Buttons */
+    .btnrow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .btn{
-      display:inline-block;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
       padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(255,255,255,.06);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
       cursor:pointer;
-      font-weight:700;
+      font-weight: 900;
+      transition: transform .06s ease, filter .15s ease;
+      user-select:none;
     }
-    .btn.primary{border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.12);}
-    .btn.warn{border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.12);}
-    .btn.blue{border-color: rgba(59,130,246,.35); background: rgba(59,130,246,.12);}
-    .btn.red{border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.10);}
-    hr{border:none; border-top:1px solid rgba(255,255,255,.12); margin:18px 0;}
-    .list .item{padding:10px 0; border-top:1px solid rgba(255,255,255,.10);}
-    .list .item:first-child{border-top:none;}
-    .pill{display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px; border:1px solid rgba(255,255,255,.14);}
+    .btn:hover{ transform: translateY(-1px); filter: brightness(1.06); }
+    .btn:active{ transform: translateY(0px); }
+
+    .btn.ember{ border-color: var(--emberB); background: var(--ember); }
+    .btn.blue{ border-color: var(--blueB); background: var(--blue); }
+    .btn.green{ border-color: var(--greenB); background: var(--green); }
+    .btn.red{ border-color: var(--redB); background: var(--red); }
+    .btn.warn{ border-color: var(--warnB); background: var(--warn); }
+
+    /* Cards */
+    .card{
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--card2), var(--card));
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: 0 22px 60px var(--shadow);
+      margin: 12px 0;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+    }
+
+    .stat{
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      border-radius: 14px;
+      padding: 12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .metric{
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing:.2px;
+      line-height: 1;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      color: rgba(232,238,252,.85);
+      font-weight: 900;
+    }
+
+    hr{
+      border:none;
+      border-top:1px solid rgba(255,255,255,.12);
+      margin: 18px 0;
+    }
+
+    /* List / table-like rows */
+    .list{
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 14px;
+      overflow:hidden;
+      background: rgba(0,0,0,.12);
+    }
+
+    .item{
+      padding: 12px 14px;
+      border-top:1px solid rgba(255,255,255,.10);
+    }
+    .item:first-child{ border-top:none; }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .row .left{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .row .right{
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    @media (max-width: 480px){
+      .metric{ font-size: 26px; }
+    }
   </style>
 </head>
+
 <body>
+  <div class="wrap">
 
-  <div class="top">
-    <div>
-      <h1 style="margin:0;">Panel Admin 🧑‍💼</h1>
-      <div class="muted">Bienvenido, {{ current_user.username }}</div>
-    </div>
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="title">
+        <h1>🧑‍💼 Admin</h1>
+        <span class="badge">🔥 Rancho27 · Panel</span>
+        <span class="muted">Bienvenido, <b style="color:rgba(232,238,252,.95)">{{ current_user.username }}</b></span>
+      </div>
 
-    <div class="btnrow">
-      <a class="btn red" href="{{ url_for('logout') }}">🚪 Cerrar sesión</a>
-    </div>
-  </div>
-
-  <!-- Accesos rápidos -->
-  <!-- ACCESOS RÁPIDOS -->
-<section style="margin-top:16px;">
-  <h2 style="margin:0 0 10px 0;">⚡ Accesos rápidos</h2>
-
-  <div class="grid">
-    <div class="card">
-      <h3>🧾 Pedidos abiertos</h3>
-      <div class="metric">{{ pedidos_abiertos_count }}</div>
-      <div class="muted">Actualiza en tiempo real en el panel de pedidos</div>
       <div class="btnrow">
-        <a class="btn primary" href="{{ url_for('admin_pedidos') }}">Ver pedidos</a>
+        <a class="btn red" href="{{ url_for('logout') }}">🚪 Cerrar sesión</a>
       </div>
     </div>
 
+    <!-- ACCESOS RÁPIDOS -->
     <div class="card">
-      <h3>📦 Productos activos</h3>
-      <div class="metric">{{ productos_activos_count }}</div>
-      <div class="muted">Total productos: {{ productos_total_count }}</div>
-      <div class="btnrow">
-        <a class="btn blue" href="{{ url_for('admin_productos') }}">Gestionar productos</a>
+      <div style="display:flex; justify-content:space-between; align-items:end; gap:10px; flex-wrap:wrap;">
+        <div>
+          <h2 style="font-size:16px; font-weight:900;">⚡ Accesos rápidos</h2>
+          <div class="muted">Control de operación: pedidos, productos, usuarios y caja</div>
+        </div>
+        <span class="pill">Estado: <span style="color:rgba(34,197,94,.95)">●</span> Online</span>
       </div>
-    </div>
 
-    <div class="card">
-      <h3>👥 Meseros activos</h3>
-      <div class="metric">{{ meseros_activos_count }}</div>
-      <div class="muted">Crea / desactiva usuarios</div>
-      <div class="btnrow">
-        <a class="btn warn" href="{{ url_for('admin_usuarios') }}">Gestionar usuarios</a>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>💰 Caja</h3>
-      <div class="muted">Reportes por fechas</div>
-      <div class="btnrow">
-        <a class="btn blue" href="{{ url_for('caja_dia') }}">📊 Abrir caja</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<hr style="margin:24px 0;">
-
-
-  <!-- Últimos pedidos cerrados -->
-  <div class="card">
-    <h3 style="margin:0 0 10px 0;">🕘 Últimos pedidos cerrados</h3>
-
-    {% if pedidos_cerrados|length == 0 %}
-      <div class="muted">Aún no hay pedidos cerrados.</div>
-    {% else %}
-      <div class="list">
-        {% for p in pedidos_cerrados %}
-          <div class="item">
-            <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-              <div>
-                <b>Pedido #{{ p.id }}</b>
-                <span class="pill">Mesa {{ p.mesa.numero }}</span>
-                <span class="pill">Mesero {{ p.mesero.username }}</span>
-              </div>
-              <div class="muted">
-                {{ p.fecha.strftime("%Y-%m-%d %H:%M") if p.fecha else "" }}
-              </div>
-            </div>
-
-            <div class="btnrow" style="margin-top:8px;">
-              <a class="btn" href="{{ url_for('ver_factura', pedido_id=p.id) }}">🧾 Ver factura</a>
-            </div>
+      <div class="grid" style="margin-top:12px;">
+        <div class="stat">
+          <div class="muted">🧾 Pedidos abiertos</div>
+          <div class="metric">{{ pedidos_abiertos_count }}</div>
+          <div class="muted">Actualiza en tiempo real</div>
+          <div class="btnrow">
+            <a class="btn green" href="{{ url_for('admin_pedidos') }}">Ver pedidos</a>
           </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  </div>
+        </div>
 
+        <div class="stat">
+          <div class="muted">📦 Productos activos</div>
+          <div class="metric">{{ productos_activos_count }}</div>
+          <div class="muted">Total productos: <b style="color:rgba(232,238,252,.92)">{{ productos_total_count }}</b></div>
+          <div class="btnrow">
+            <a class="btn blue" href="{{ url_for('admin_productos') }}">Gestionar productos</a>
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="muted">👥 Meseros activos</div>
+          <div class="metric">{{ meseros_activos_count }}</div>
+          <div class="muted">Crear / desactivar usuarios</div>
+          <div class="btnrow">
+            <a class="btn warn" href="{{ url_for('admin_usuarios') }}">Gestionar usuarios</a>
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="muted">💰 Caja</div>
+          <div class="metric">📊</div>
+          <div class="muted">Reportes por fechas</div>
+          <div class="btnrow">
+            <a class="btn ember" href="{{ url_for('caja_dia') }}">Abrir caja</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÚLTIMOS PEDIDOS CERRADOS -->
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:end; gap:10px; flex-wrap:wrap;">
+        <div>
+          <h2 style="font-size:16px; font-weight:900;">🕘 Últimos pedidos cerrados</h2>
+          <div class="muted">Acceso rápido a facturas recientes</div>
+        </div>
+        <span class="pill">Historial</span>
+      </div>
+
+      <div style="margin-top:12px;">
+        {% if pedidos_cerrados|length == 0 %}
+          <div class="muted">Aún no hay pedidos cerrados.</div>
+        {% else %}
+          <div class="list">
+            {% for p in pedidos_cerrados %}
+              <div class="item">
+                <div class="row">
+                  <div class="left">
+                    <b>Pedido #{{ p.id }}</b>
+                    <span class="pill">Mesa {{ p.mesa.numero }}</span>
+                    <span class="pill">Mesero {{ p.mesero.username }}</span>
+                  </div>
+                  <div class="right">
+                    {{ (p.fecha_cierre or p.fecha).strftime("%Y-%m-%d %H:%M") if (p.fecha_cierre or p.fecha) else "" }}
+                  </div>
+                </div>
+
+                <div class="btnrow" style="margin-top:10px;">
+                  <a class="btn" href="{{ url_for('ver_factura', pedido_id=p.id) }}">🧾 Ver factura</a>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
 </body>
 </html>

@@ -137,6 +137,137 @@
         </tbody>
       </table>
     {% endif %}
+
+    <div class="card">
+  <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; align-items:end;">
+    <div>
+      <h2 style="margin:0;">📊 Ventas</h2>
+      <div class="muted" id="txtPromedio" style="margin-top:4px;"></div>
+    </div>
+
+    <form id="filtroGrafica" style="display:flex; gap:8px; flex-wrap:wrap; align-items:end;">
+      <div>
+        <div class="muted">Vista</div>
+        <select id="granularity" style="padding:10px 12px; border-radius:6px; border:1px solid #ccc;">
+          <option value="day">Diario</option>
+          <option value="month">Mensual</option>
+        </select>
+      </div>
+
+      <div>
+        <div class="muted">Desde</div>
+        <input id="fromDate" type="date" style="padding:10px 12px; border-radius:6px; border:1px solid #ccc;">
+      </div>
+
+      <div>
+        <div class="muted">Hasta</div>
+        <input id="toDate" type="date" style="padding:10px 12px; border-radius:6px; border:1px solid #ccc;">
+      </div>
+
+      <button class="btn" type="submit">Aplicar</button>
+      <button class="btn" id="btnReset" type="button">Reset</button>
+    </form>
+  </div>
+
+  <div style="margin-top:12px;">
+    <canvas id="chartVentas" height="110"></canvas>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  let chartRef = null;
+
+  function moneyCO(v){
+    return "$" + Math.round(v).toLocaleString("es-CO");
+  }
+
+  function buildParams(){
+    const gran = document.getElementById("granularity").value;
+    const from = document.getElementById("fromDate").value;
+    const to = document.getElementById("toDate").value;
+
+    const params = new URLSearchParams();
+    params.set("granularity", gran);
+    if (from) params.set("from", from);
+    if (to) params.set("to", to);
+    return params.toString();
+  }
+
+  async function cargarGrafica(){
+    const qs = buildParams();
+    const res = await fetch(`/admin/caja/resumen.json?${qs}`, { cache: "no-store" });
+    if (!res.ok) {
+      document.getElementById("txtPromedio").textContent = "No se pudo cargar la gráfica.";
+      return;
+    }
+
+    const data = await res.json();
+    const labels = data.labels || [];
+    const values = data.values || [];
+    const promedio = data.promedio || 0;
+
+    const gran = document.getElementById("granularity").value;
+    document.getElementById("txtPromedio").textContent =
+      (values.length ? `Promedio ${gran === "month" ? "mensual" : "diario"}: ${moneyCO(promedio)}` : "Sin datos en el rango.");
+
+    const ctx = document.getElementById("chartVentas");
+    if (!ctx) return;
+
+    // destruir si ya existe
+    if (chartRef) {
+      chartRef.destroy();
+      chartRef = null;
+    }
+
+    chartRef = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{
+          label: gran === "month" ? "Ventas mensuales" : "Ventas diarias",
+          data: values,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true },
+          tooltip: {
+            callbacks: {
+              label: (c) => `${c.dataset.label}: ${moneyCO(c.raw)}`
+            }
+          }
+        },
+        scales: {
+          y: {
+            ticks: {
+              callback: (v) => moneyCO(v)
+            }
+          }
+        }
+      }
+    });
+  }
+
+  // eventos
+  document.getElementById("filtroGrafica").addEventListener("submit", (e) => {
+    e.preventDefault();
+    cargarGrafica();
+  });
+
+  document.getElementById("btnReset").addEventListener("click", () => {
+    document.getElementById("fromDate").value = "";
+    document.getElementById("toDate").value = "";
+    document.getElementById("granularity").value = "day";
+    cargarGrafica();
+  });
+
+  // cargar al abrir
+  cargarGrafica();
+</script>
+
   </div>
 
 </body>

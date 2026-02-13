@@ -12,7 +12,7 @@ from flask_login import (
     login_user,
     logout_user
 )
-from flask import abort
+
 from extensions import db, login_manager, cors
 from models import User, Mesa, Producto, Pedido, PedidoDetalle
 
@@ -21,8 +21,18 @@ load_dotenv()
 app = Flask(__name__)
 
 # ---------- CONFIGURACIÓN ----------
+# ✅ En Render NO existe tu .env (a menos que lo copies), allá se usan Environment Variables.
+# ✅ SECRET_KEY debe venir de Render o usa fallback local.
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret")
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
+
+# ✅ Postgres en Render: DATABASE_URL
+db_url = os.getenv("DATABASE_URL", "sqlite:///database.db")
+
+# Render a veces entrega postgres:// y SQLAlchemy necesita postgresql://
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # ---------- INICIALIZAR EXTENSIONES ----------
@@ -32,21 +42,41 @@ cors.init_app(app)
 
 login_manager.login_view = "login"
 
+# ✅ IMPORTANTÍSIMO: en Render la app no entra al __main__.
+# Por eso creamos tablas aquí al iniciar.
+def seed_users():
+    # crea admin y mesero solo si no existen
+    if not User.query.filter_by(username="admin").first():
+        admin = User(username="admin", role="admin", activo=True)
+        admin.set_password(os.getenv("ADMIN_PASSWORD", "admin123"))
+        db.session.add(admin)
+
+    if not User.query.filter_by(username="mesero").first():
+        mesero = User(username="mesero", role="mesero", activo=True)
+        mesero.set_password(os.getenv("MESERO_PASSWORD", "mesero123"))
+        db.session.add(mesero)
+
+    db.session.commit()
+
+
+
+with app.app_context():
+    db.create_all()
+    seed_users()
+
+# ---------- FILTRO HORA BOGOTÁ ----------
 @app.template_filter("hora_bogota")
 def hora_bogota(dt):
     if not dt:
         return ""
     try:
-        # Si viene sin tzinfo, asumimos que es hora local del servidor
-        # y la convertimos a Bogotá
         if dt.tzinfo is None:
             dt = dt.replace(tzinfo=ZoneInfo("America/Bogota"))
         return dt.astimezone(ZoneInfo("America/Bogota")).strftime("%H:%M")
     except Exception:
-        # fallback
         return dt.strftime("%H:%M")
 
-# ---------- FILTRO COP (para imprimir dinero estilo Colombia) ----------
+# ---------- FILTRO COP ----------
 @app.template_filter("cop")
 def cop(value):
     try:
@@ -55,17 +85,15 @@ def cop(value):
         n = 0
     return "$" + f"{n:,}".replace(",", ".")
 
-
 # ---------- LOGIN MANAGER ----------
 @login_manager.user_loader
 def load_user(user_id):
     return db.session.get(User, int(user_id))
 
-
 # ---------- LOGIN ----------
 @app.route("/", methods=["GET", "POST"])
 def login():
-    error = None  # para mostrar mensajes en el HTML (opcional)
+    error = None
 
     if request.method == "POST":
         username = request.form.get("username", "").strip()
@@ -74,7 +102,6 @@ def login():
         user = User.query.filter_by(username=username).first()
 
         if user and user.check_password(password):
-            # ✅ bloquear si está desactivado
             if hasattr(user, "activo") and not user.activo:
                 error = "Usuario desactivado. Contacta al administrador."
             else:
@@ -96,13 +123,11 @@ def login():
     return render_template("login.html", error=error)
 
 
-
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for("login"))
-
 
 # ---------- MESERO: MESAS ----------
 @app.route("/mesas")
@@ -114,8 +139,6 @@ def ver_mesas():
     mesas = Mesa.query.order_by(Mesa.numero.asc()).all()
     return render_template("mesas.html", mesas=mesas)
 
-
-# ✅ Mesas en tiempo real (JSON)
 @app.route("/mesas.json")
 @login_required
 def mesas_json():
@@ -127,8 +150,7 @@ def mesas_json():
         "mesas": [{"id": m.id, "numero": m.numero, "estado": m.estado} for m in mesas]
     })
 
-
-# ---------- MESERO: MENU / ENVIAR PEDIDO (1 pedido abierto por mesa) ----------
+# ---------- MESERO: MENU / ENVIAR PEDIDO ----------
 @app.route("/mesa/<int:mesa_id>", methods=["GET", "POST"])
 @login_required
 def menu_mesa(mesa_id):
@@ -139,7 +161,7 @@ def menu_mesa(mesa_id):
     productos = Producto.query.filter_by(activo=True).order_by(Producto.nombre.asc()).all()
 
     if request.method == "POST":
-        items = []  # [(producto_id, cantidad)]
+        items = []
         for producto in productos:
             cantidad_str = request.form.get(f"producto_{producto.id}", "0")
             try:
@@ -191,9 +213,7 @@ def menu_mesa(mesa_id):
 
     return render_template("menu.html", mesa=mesa, productos=productos, error=None)
 
-
 # ---------- ADMIN: PANEL ----------
-
 @app.route("/admin/pedidos")
 @login_required
 def admin_pedidos():
@@ -220,13 +240,10 @@ def admin_panel():
         pedidos_cerrados=pedidos_cerrados
     )
 
-from datetime import datetime, date, time
-
-
 def solo_admin():
     return current_user.is_authenticated and (current_user.role or "").lower() == "admin"
 
-
+# ---------- ADMIN: USUARIOS ----------
 @app.route("/admin/usuarios")
 @login_required
 def admin_usuarios():
@@ -235,7 +252,6 @@ def admin_usuarios():
 
     usuarios = User.query.order_by(User.role.asc(), User.username.asc()).all()
     return render_template("admin_usuarios.html", usuarios=usuarios)
-
 
 @app.route("/admin/usuarios/nuevo", methods=["GET", "POST"])
 @login_required
@@ -246,7 +262,7 @@ def admin_usuario_nuevo():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
-        role = "mesero"  # ✅ solo mesero por seguridad
+        role = "mesero"
 
         if not username or not password:
             return render_template("admin_usuario_form.html", error="Faltan datos.", usuario=None)
@@ -262,7 +278,6 @@ def admin_usuario_nuevo():
 
     return render_template("admin_usuario_form.html", error=None, usuario=None)
 
-
 @app.route("/admin/usuarios/<int:user_id>/toggle", methods=["POST"])
 @login_required
 def admin_usuario_toggle(user_id):
@@ -273,18 +288,15 @@ def admin_usuario_toggle(user_id):
     if not u:
         return redirect(url_for("admin_usuarios"))
 
-    # No tocar admins por seguridad
     if (u.role or "").lower() != "mesero":
         return redirect(url_for("admin_usuarios"))
 
-    # No desactivar al usuario logueado si fuera mesero (normalmente admin no es mesero)
     if u.id == current_user.id:
         return redirect(url_for("admin_usuarios"))
 
     u.activo = not bool(u.activo)
     db.session.commit()
     return redirect(url_for("admin_usuarios"))
-
 
 @app.route("/admin/usuarios/<int:user_id>/eliminar", methods=["POST"])
 @login_required
@@ -296,14 +308,11 @@ def admin_usuario_eliminar(user_id):
     if not u:
         return redirect(url_for("admin_usuarios"))
 
-    # Solo borrar meseros
     if (u.role or "").lower() != "mesero":
         return redirect(url_for("admin_usuarios"))
 
-    # Regla para NO romper historial: si tiene pedidos, no se borra
     tiene_pedidos = Pedido.query.filter_by(mesero_id=u.id).first()
     if tiene_pedidos:
-        # En vez de borrar, mejor desactivar
         u.activo = False
         db.session.commit()
         return redirect(url_for("admin_usuarios"))
@@ -312,35 +321,27 @@ def admin_usuario_eliminar(user_id):
     db.session.commit()
     return redirect(url_for("admin_usuarios"))
 
-
+# ---------- ADMIN: CAJA ----------
 @app.route("/admin/caja")
 @login_required
 def caja_dia():
     if current_user.role.lower() != "admin":
         return redirect(url_for("login"))
 
-    # 1) Traer todas las fechas únicas (YYYY-MM-DD) donde hubo pedidos cerrados
     fechas_rows = (
-        db.session.query(db.func.date(Pedido.fecha_cierre))
-        .filter(
-            Pedido.estado == "cerrado",
-            Pedido.fecha_cierre.isnot(None)
-        )
-        .group_by(db.func.date(Pedido.fecha_cierre))
-        .order_by(db.func.date(Pedido.fecha_cierre).desc())
+        db.session.query(func.date(Pedido.fecha_cierre))
+        .filter(Pedido.estado == "cerrado", Pedido.fecha_cierre.isnot(None))
+        .group_by(func.date(Pedido.fecha_cierre))
+        .order_by(func.date(Pedido.fecha_cierre).desc())
         .all()
     )
 
-    # lista tipo ["2026-02-09", "2026-02-08", ...]
     fechas_disponibles = [str(r[0]) for r in fechas_rows if r[0] is not None]
 
-    # 2) Determinar qué día mostrar
     fecha_str = request.args.get("fecha", "").strip()
-
     if fecha_str and fecha_str in fechas_disponibles:
         dia = datetime.strptime(fecha_str, "%Y-%m-%d").date()
     else:
-        # por defecto, el más reciente
         dia = datetime.strptime(fechas_disponibles[0], "%Y-%m-%d").date() if fechas_disponibles else date.today()
 
     inicio = datetime.combine(dia, time.min)
@@ -362,8 +363,7 @@ def caja_dia():
     conteo = len(pedidos)
     por_metodo = {"efectivo": 0.0, "transferencia": 0.0, "tarjeta": 0.0, "otro": 0.0}
     pedidos_info = []
-
-    top = {}  # nombre -> {"cantidad": x, "ventas": y}
+    top = {}
 
     for p in pedidos:
         total_pedido = 0.0
@@ -412,8 +412,7 @@ def caja_dia():
         top_lista=top_lista
     )
 
-
-# ---------- ADMIN: FACTURA (HTML imprimible) ----------
+# ---------- ADMIN: FACTURA ----------
 @app.route("/admin/factura/<int:pedido_id>")
 @login_required
 def ver_factura(pedido_id):
@@ -436,20 +435,10 @@ def ver_factura(pedido_id):
             "subtotal": subtotal
         })
 
-    # ✅ si viene ?print=1 => auto imprimir en factura.html
     auto_print = request.args.get("print") == "1"
-    error = request.args.get("error")
+    return render_template("factura.html", pedido=pedido, items=items, total=total, auto_print=auto_print)
 
-    return render_template(
-        "factura.html",
-        pedido=pedido,
-        items=items,
-        total=total,
-        auto_print=auto_print
-    )
-
-
-# ✅ Pedidos en tiempo real (JSON) + total + subtotales
+# ---------- ADMIN: PEDIDOS JSON ----------
 @app.route("/admin/pedidos.json")
 @login_required
 def admin_pedidos_json():
@@ -492,8 +481,7 @@ def admin_pedidos_json():
 
     return jsonify({"pedidos": data})
 
-
-# ---------- ADMIN: CERRAR PEDIDO (LIBERA MESA) ----------
+# ---------- ADMIN: CERRAR PEDIDO ----------
 @app.route("/admin/pedido/<int:pedido_id>/cerrar", methods=["POST"])
 @login_required
 def cerrar_pedido(pedido_id):
@@ -513,9 +501,7 @@ def cerrar_pedido(pedido_id):
 
     return redirect(url_for("admin_panel"))
 
-
-from datetime import datetime
-
+# ---------- ADMIN: COBRAR PEDIDO ----------
 @app.route("/admin/pedido/<int:pedido_id>/cobrar", methods=["POST"])
 @login_required
 def cobrar_pedido(pedido_id):
@@ -524,16 +510,13 @@ def cobrar_pedido(pedido_id):
 
     pedido = Pedido.query.get_or_404(pedido_id)
 
-    # leer datos del form
     metodo_pago = (request.form.get("metodo_pago") or "").strip().lower()
     monto_recibido_raw = (request.form.get("monto_recibido") or "").strip()
 
-    # calcular total del pedido
     total = 0.0
     for d in pedido.detalles:
         total += float(d.producto.precio) * int(d.cantidad)
 
-    # calcular cambio
     cambio = 0.0
     monto_recibido = None
 
@@ -545,38 +528,29 @@ def cobrar_pedido(pedido_id):
 
         cambio = monto_recibido - total
         if cambio < 0:
-            # no alcanza el dinero
             return redirect(url_for("ver_factura", pedido_id=pedido.id, error="pago_insuficiente"))
 
     elif metodo_pago in ["transferencia", "tarjeta"]:
-        # normalmente no hay cambio
         monto_recibido = total
         cambio = 0.0
     else:
         return redirect(url_for("ver_factura", pedido_id=pedido.id, error="metodo_invalido"))
 
-    # cerrar pedido + guardar pago
     pedido.estado = "cerrado"
     pedido.metodo_pago = metodo_pago
     pedido.monto_recibido = monto_recibido
     pedido.cambio = cambio
     pedido.fecha_cierre = datetime.now()
 
-    # liberar mesa
     mesa = db.session.get(Mesa, pedido.mesa_id)
     if mesa:
         mesa.estado = "libre"
 
     db.session.commit()
 
-    # auto imprimir
     return redirect(url_for("ver_factura", pedido_id=pedido.id, print=1))
 
-
-def solo_admin():
-    return current_user.is_authenticated and (current_user.role or "").lower() == "admin"
-
-
+# ---------- ADMIN: PRODUCTOS ----------
 @app.route("/admin/productos")
 @login_required
 def admin_productos():
@@ -585,7 +559,6 @@ def admin_productos():
 
     productos = Producto.query.order_by(Producto.activo.desc(), Producto.nombre.asc()).all()
     return render_template("admin_productos.html", productos=productos)
-
 
 @app.route("/admin/productos/nuevo", methods=["GET", "POST"])
 @login_required
@@ -619,7 +592,6 @@ def admin_producto_nuevo():
 
     return render_template("admin_producto_form.html", modo="nuevo", producto=None, error=error)
 
-
 @app.route("/admin/productos/<int:producto_id>/editar", methods=["GET", "POST"])
 @login_required
 def admin_producto_editar(producto_id):
@@ -645,7 +617,6 @@ def admin_producto_editar(producto_id):
                 error = "Precio inválido. Ej: 12000"
 
         if error:
-            # mantener lo que escribió el usuario
             producto.nombre = nombre
             try:
                 producto.precio = float(precio_str)
@@ -663,7 +634,6 @@ def admin_producto_editar(producto_id):
 
     return render_template("admin_producto_form.html", modo="editar", producto=producto, error=error)
 
-
 @app.route("/admin/productos/<int:producto_id>/toggle", methods=["POST"])
 @login_required
 def admin_producto_toggle(producto_id):
@@ -675,7 +645,6 @@ def admin_producto_toggle(producto_id):
     db.session.commit()
     return redirect(url_for("admin_productos"))
 
-
 @app.route("/admin/productos/<int:producto_id>/eliminar", methods=["POST"])
 @login_required
 def admin_producto_eliminar(producto_id):
@@ -684,7 +653,6 @@ def admin_producto_eliminar(producto_id):
 
     producto = Producto.query.get_or_404(producto_id)
 
-    # ✅ regla segura: si el producto ya se usó en pedidos, NO lo borres (desactívalo)
     usado = PedidoDetalle.query.filter_by(producto_id=producto.id).first()
     if usado:
         producto.activo = False
@@ -695,10 +663,6 @@ def admin_producto_eliminar(producto_id):
     db.session.commit()
     return redirect(url_for("admin_productos"))
 
-
-
 # ---------- MAIN ----------
 if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
     app.run(host="0.0.0.0", port=8000, debug=False)

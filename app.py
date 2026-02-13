@@ -499,12 +499,16 @@ def admin_pedidos_json():
             })
 
         data.append({
-            "id": p.id,
-            "mesa": p.mesa.numero,
-            "mesero": p.mesero.username,
-            "fecha": p.fecha.isoformat() if p.fecha else "",
-            "detalles": detalles,
-            "total": total
+        "id": p.id,
+        "mesa": p.mesa.numero,
+        "mesero": p.mesero.username,
+
+        # ⬇️ deja fecha si quieres, pero agrega hora ya corregida
+        "fecha": p.fecha.isoformat() if p.fecha else "",
+        "hora": hora_bogota(p.fecha),  # ✅ Bogotá
+
+        "detalles": detalles,
+        "total": total
         })
 
     return jsonify({"pedidos": data})

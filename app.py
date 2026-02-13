@@ -339,6 +339,83 @@ def admin_usuario_eliminar(user_id):
     return redirect(url_for("admin_usuarios"))
 
 # ---------- ADMIN: CAJA ----------
+
+@app.route("/admin/caja/resumen.json")
+@login_required
+def caja_resumen_json():
+    if (current_user.role or "").lower() != "admin":
+        return jsonify({"error": "forbidden"}), 403
+
+    # query params
+    gran = (request.args.get("granularity") or "day").lower()   # day | month
+    from_str = (request.args.get("from") or "").strip()         # YYYY-MM-DD
+    to_str = (request.args.get("to") or "").strip()             # YYYY-MM-DD
+
+    # rango opcional
+    inicio = None
+    fin = None
+    try:
+        if from_str:
+            d = datetime.strptime(from_str, "%Y-%m-%d").date()
+            inicio = datetime.combine(d, time.min)
+        if to_str:
+            d = datetime.strptime(to_str, "%Y-%m-%d").date()
+            fin = datetime.combine(d, time.max)
+    except ValueError:
+        return jsonify({"error": "bad_date_format"}), 400
+
+    # agrupación
+    if gran == "month":
+        # PostgreSQL: date_trunc('month', ...)
+        bucket = func.date_trunc("month", Pedido.fecha_cierre)
+    else:
+        # day
+        bucket = func.date(Pedido.fecha_cierre)
+
+    q = (
+        db.session.query(
+            bucket.label("bucket"),
+            func.sum(PedidoDetalle.cantidad * Producto.precio).label("ventas")
+        )
+        .join(PedidoDetalle, PedidoDetalle.pedido_id == Pedido.id)
+        .join(Producto, Producto.id == PedidoDetalle.producto_id)
+        .filter(Pedido.estado == "cerrado", Pedido.fecha_cierre.isnot(None))
+    )
+
+    if inicio is not None:
+        q = q.filter(Pedido.fecha_cierre >= inicio)
+    if fin is not None:
+        q = q.filter(Pedido.fecha_cierre <= fin)
+
+    rows = (
+        q.group_by(bucket)
+         .order_by(bucket.asc())
+         .all()
+    )
+
+    labels = []
+    values = []
+
+    for r in rows:
+        b = r.bucket
+        # b puede venir como datetime (month) o date (day)
+        if hasattr(b, "strftime"):
+            if gran == "month":
+                labels.append(b.strftime("%Y-%m"))      # 2026-02
+            else:
+                labels.append(b.strftime("%Y-%m-%d"))   # 2026-02-13
+        else:
+            labels.append(str(b))
+        values.append(float(r.ventas or 0))
+
+    promedio = (sum(values) / len(values)) if values else 0
+
+    return jsonify({
+        "labels": labels,
+        "values": values,
+        "promedio": promedio
+    })
+
 @app.route("/admin/caja")
 @login_required
 def caja_dia():

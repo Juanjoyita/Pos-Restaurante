@@ -85,7 +85,7 @@
           <li>${d.nombre} x ${d.cantidad} — ${formatoDinero(d.precio)} c/u — <b>${formatoDinero(d.subtotal)}</b></li>
         `).join("");
 
-        const hora = (p.fecha || "").slice(11,16); // HH:MM del ISO
+        const hora = p.hora || "";
 
         return `
           <div class="pedido ${esNuevo ? "pedido-nuevo" : ""}">

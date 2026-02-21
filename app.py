@@ -37,6 +37,7 @@ login_manager.login_view = "login"
 
 # ---------- CATEGORÍAS ----------
 CATEGORIAS = [
+    "especialidad"
     "desayunos",
     "almuerzos",
     "porciones",

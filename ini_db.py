@@ -1,10 +1,39 @@
-
 from app import app
 from extensions import db
 from models import User, Mesa, Producto
+from sqlalchemy import text
 
 with app.app_context():
+
+    # ─── MIGRACIONES MANUALES ─────────────────────────────────────
+    # db.create_all() NO agrega columnas a tablas existentes.
+    # Por eso agregamos las columnas que faltan con SQL directo.
+    # Usamos IF NOT EXISTS para que no falle si ya existen.
+    migraciones = [
+        # Tabla producto
+        "ALTER TABLE producto ADD COLUMN IF NOT EXISTS categoria VARCHAR(30) NOT NULL DEFAULT 'almuerzos'",
+        # Tabla pedido
+        "ALTER TABLE pedido ADD COLUMN IF NOT EXISTS metodo_pago  VARCHAR(20)",
+        "ALTER TABLE pedido ADD COLUMN IF NOT EXISTS monto_recibido FLOAT",
+        "ALTER TABLE pedido ADD COLUMN IF NOT EXISTS cambio FLOAT",
+        "ALTER TABLE pedido ADD COLUMN IF NOT EXISTS fecha_cierre TIMESTAMP",
+        # Tabla user
+        "ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS activo BOOLEAN DEFAULT TRUE",
+    ]
+
+    for sql in migraciones:
+        try:
+            db.session.execute(text(sql))
+            print(f"✅ Migración OK: {sql[:60]}...")
+        except Exception as e:
+            print(f"⚠️  Migración omitida: {e}")
+
+    db.session.commit()
+    print("✅ Migraciones completas")
+
+    # ─── CREAR TABLAS NUEVAS (si las hubiera) ────────────────────
     db.create_all()
+    print("✅ Tablas verificadas")
 
     # ─── USUARIOS ────────────────────────────────────────────────
     if not User.query.filter_by(username="admin").first():
@@ -33,7 +62,7 @@ with app.app_context():
             db.session.add(Mesa(numero=i, estado="libre"))
             mesas_nuevas += 1
     db.session.commit()
-    print(f"✅ Mesas: {mesas_nuevas} nuevas creadas | Total: {Mesa.query.count()}")
+    print(f"✅ Mesas: {mesas_nuevas} nuevas | Total: {Mesa.query.count()}")
 
     # ─── PRODUCTOS BASE ──────────────────────────────────────────
     productos_base = [

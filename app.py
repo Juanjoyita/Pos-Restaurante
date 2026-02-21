@@ -78,39 +78,71 @@ def bogota_day_to_utc_range(d: date):
     return inicio_utc, fin_utc
 
 
-# ---------- SEED USERS ----------
+# ---------- SEED ----------
 def seed_users():
     if not User.query.filter_by(username="admin").first():
         admin = User(username="admin", role="admin", activo=True)
         admin.set_password(os.getenv("ADMIN_PASSWORD", "admin123"))
         db.session.add(admin)
+        print("✅ Usuario admin creado")
+    else:
+        print("ℹ️  Usuario admin ya existe")
 
     if not User.query.filter_by(username="mesero").first():
         mesero = User(username="mesero", role="mesero", activo=True)
         mesero.set_password(os.getenv("MESERO_PASSWORD", "mesero123"))
         db.session.add(mesero)
+        print("✅ Usuario mesero creado")
+    else:
+        print("ℹ️  Usuario mesero ya existe")
 
     db.session.commit()
 
 
 def seed_mesas(total=20):
-    if Mesa.query.count() == 0:
+    existentes = Mesa.query.count()
+    if existentes == 0:
         for i in range(1, total + 1):
             db.session.add(Mesa(numero=i, estado="libre"))
         db.session.commit()
+        print(f"✅ {total} mesas creadas")
+    else:
+        print(f"ℹ️  Ya existen {existentes} mesas, no se crearon nuevas")
 
 
+# ---------- ARRANQUE ----------
 with app.app_context():
-    db.create_all()
-    seed_users()
-    seed_mesas(20)
+    try:
+        # ✅ Muestra a qué DB estás conectado (primeros 40 chars)
+        db_uri = app.config["SQLALCHEMY_DATABASE_URI"]
+        print(f"🔌 Conectando a: {db_uri[:40]}...")
+
+        if "sqlite" in db_uri:
+            print("⚠️  ADVERTENCIA: usando SQLite, no PostgreSQL.")
+            print("⚠️  Verifica que DATABASE_URL esté configurada en Render → Environment.")
+
+        db.create_all()
+        print("✅ Tablas verificadas / creadas")
+
+        seed_users()
+        seed_mesas(20)
+
+        # ✅ Confirmación final con conteo real desde la DB
+        total_usuarios = User.query.count()
+        total_mesas = Mesa.query.count()
+        print(f"📊 Estado DB → Usuarios: {total_usuarios} | Mesas: {total_mesas}")
+        print("✅ DB lista")
+
+    except Exception as e:
+        print(f"❌ Error al inicializar DB: {e}")
+        raise  # Re-lanza para que Render lo marque como fallo y no arranque roto
 
 
 # ---------- FILTROS DE TEMPLATE ----------
 
 @app.template_filter("hora_bogota")
 def hora_bogota_filter(dt):
-    """Muestra solo la hora en formato HH:MM (hora Bogotá)."""
+    """Muestra solo la hora HH:MM en hora Bogotá."""
     if not dt:
         return ""
     try:
@@ -121,7 +153,7 @@ def hora_bogota_filter(dt):
 
 @app.template_filter("fecha_bogota")
 def fecha_bogota_filter(dt):
-    """Muestra solo la fecha en formato DD/MM/YYYY (hora Bogotá)."""
+    """Muestra solo la fecha DD/MM/YYYY en hora Bogotá."""
     if not dt:
         return ""
     try:
@@ -132,7 +164,7 @@ def fecha_bogota_filter(dt):
 
 @app.template_filter("datetime_bogota")
 def datetime_bogota_filter(dt):
-    """Muestra fecha y hora completa: DD/MM/YYYY HH:MM (hora Bogotá)."""
+    """Muestra fecha y hora completa DD/MM/YYYY HH:MM en hora Bogotá."""
     if not dt:
         return ""
     try:
@@ -241,12 +273,7 @@ def comanda_mesero(pedido_id):
             "subtotal": subtotal
         })
 
-    return render_template(
-        "comanda.html",
-        pedido=pedido,
-        items=items,
-        total=total
-    )
+    return render_template("comanda.html", pedido=pedido, items=items, total=total)
 
 
 # ---------- MESERO: MENÚ / ENVIAR PEDIDO ----------
@@ -415,7 +442,6 @@ def admin_pedidos_json():
             "id": p.id,
             "mesa": p.mesa.numero,
             "mesero": p.mesero.username,
-            # ✅ ISO string ya en Bogotá para que el frontend no tenga que convertir
             "fecha": to_bogota(p.fecha).strftime("%d/%m/%Y %H:%M") if p.fecha else "",
             "hora": hora_bogota_filter(p.fecha),
             "detalles": detalles,
@@ -435,7 +461,6 @@ def cerrar_pedido(pedido_id):
     pedido = Pedido.query.get_or_404(pedido_id)
     if pedido.estado != "cerrado":
         pedido.estado = "cerrado"
-        # ✅ fecha_cierre en UTC
         pedido.fecha_cierre = datetime.utcnow()
         mesa = db.session.get(Mesa, pedido.mesa_id)
         if mesa:
@@ -482,7 +507,6 @@ def cobrar_pedido(pedido_id):
     pedido.metodo_pago = metodo_pago
     pedido.monto_recibido = monto_recibido
     pedido.cambio = cambio
-    # ✅ Guardar cierre en UTC
     pedido.fecha_cierre = datetime.utcnow()
 
     mesa = db.session.get(Mesa, pedido.mesa_id)
@@ -500,7 +524,6 @@ def caja_dia():
     if (current_user.role or "").lower() != "admin":
         return redirect(url_for("login"))
 
-    # ✅ Agrupar por fecha en hora Bogotá usando el rango UTC correcto
     fechas_rows = (
         db.session.query(func.date(Pedido.fecha_cierre))
         .filter(Pedido.estado == "cerrado", Pedido.fecha_cierre.isnot(None))
@@ -554,7 +577,6 @@ def caja_dia():
             metodo = "otro"
         por_metodo[metodo] += total_pedido
 
-        # ✅ hora en Bogotá
         hora_ok = to_bogota(p.fecha_cierre).strftime("%H:%M") if p.fecha_cierre else ""
         pedidos_info.append({
             "id": p.id,

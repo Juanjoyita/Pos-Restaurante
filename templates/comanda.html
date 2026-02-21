@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Comanda #{{ pedido.id }} — Mesa {{ pedido.mesa.numero }}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      padding: 16px;
+      max-width: 520px;
+      margin: 0 auto;
+      background: #fafafa;
+      color: #111;
+    }
+    h1 { margin: 0 0 4px 0; font-size: 22px; }
+    .muted { color: #666; font-size: 13px; }
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 14px;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    td, th { padding: 9px 6px; border-bottom: 1px solid #eee; text-align: left; font-size: 14px; }
+    th { background: #f5f5f5; font-size: 12px; text-transform: uppercase; color: #555; }
+    .right { text-align: right; }
+    .total-row td { font-weight: 900; font-size: 17px; border-bottom: none; }
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 9px 14px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      text-decoration: none;
+      color: #111;
+      font-size: 14px;
+      background: #fff;
+      cursor: pointer;
+    }
+    .btn-print {
+      background: #111;
+      color: #fff;
+      border-color: #111;
+    }
+    .badge {
+      display: inline-block;
+      background: #f97316;
+      color: #fff;
+      border-radius: 99px;
+      padding: 2px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+    .refresh-note {
+      font-size: 11px;
+      color: #aaa;
+      text-align: right;
+      margin-top: 6px;
+    }
+    #countdown { font-weight: 700; color: #f97316; }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #fff; padding: 0; }
+      .card { box-shadow: none; border: 1px solid #ccc; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CABECERA -->
+  <div class="header-bar no-print">
+    <a class="btn" href="{{ url_for('menu_mesa', mesa_id=pedido.mesa_id) }}">↩️ Volver</a>
+    <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button>
+  </div>
+
+  <h1>🧾 Comanda <span class="badge">#{{ pedido.id }}</span></h1>
+  <div class="muted">
+    Mesa: <b>{{ pedido.mesa.numero }}</b> &nbsp;·&nbsp;
+    Mesero: <b>{{ pedido.mesero.username }}</b> &nbsp;·&nbsp;
+    {{ pedido.fecha | hora_bogota }}
+  </div>
+
+  <!-- TABLA DE PRODUCTOS -->
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th class="right">Cant.</th>
+          <th class="right">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for it in items %}
+        <tr>
+          <td>{{ it.nombre }}</td>
+          <td class="right"><b>{{ it.cantidad }}</b></td>
+          <td class="right">{{ it.subtotal | cop }}</td>
+        </tr>
+        {% endfor %}
+        <!-- TOTAL -->
+        <tr class="total-row">
+          <td colspan="2">TOTAL</td>
+          <td class="right">{{ total | cop }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="muted" style="margin-top:10px;">
+      💡 Imprime esta página y entrégala a cocina.
+    </div>
+  </div>
+
+  <!-- AUTO-REFRESH -->
+  <div class="refresh-note no-print">
+    Se actualiza en <span id="countdown">15</span>s
+    &nbsp;|&nbsp;
+    <a href="" style="color:#aaa;">Actualizar ahora</a>
+  </div>
+
+  <script>
+    // Cuenta regresiva y recarga automática cada 15 s
+    let secs = 15;
+    const el = document.getElementById('countdown');
+    setInterval(() => {
+      secs--;
+      if (el) el.textContent = secs;
+      if (secs <= 0) location.reload();
+    }, 1000);
+  </script>
+
+</body>
+</html>

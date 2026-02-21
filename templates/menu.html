@@ -7,89 +7,147 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
+<div class="container">
 
-  <div class="container">
-    <div class="menu-header">
+  <!-- HEADER -->
+  <div class="menu-header">
+    <div>
+      <div class="title">🧾 Mesa {{ mesa.numero }}</div>
+      <div class="small">Mesero: {{ current_user.username }}</div>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <a class="btn" href="{{ url_for('ver_mesas') }}">↩️ Mesas</a>
+    </div>
+  </div>
+
+  <!-- ERROR -->
+  {% if error %}
+  <div class="menu-card" style="border-color: rgba(239,68,68,.4);">
+    <b>⚠️ {{ error }}</b>
+  </div>
+  {% endif %}
+
+  <!-- ===== PEDIDO ACTUAL =====
+       IMPORTANTE: usa clase "pedido-row", NO "item", para que el JS
+       del formulario no la cuente ni interfiera con data-precio.
+  -->
+  {% if pedido_abierto and pedido_abierto.detalles|length > 0 %}
+  <div class="menu-card" style="border-color: rgba(249,115,22,.35); margin-bottom:12px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
       <div>
-        <div class="title">🧾 Mesa {{ mesa.numero }}</div>
-        <div class="small">Mesero: {{ current_user.username }}</div>
+        <b>🔥 Pedido actual — Mesa {{ mesa.numero }}</b>
+        <div class="note">Agrega más productos abajo y pulsa <em>Enviar pedido</em> para acumularlos.</div>
       </div>
+      <a class="btn"
+         href="{{ url_for('comanda_mesero', pedido_id=pedido_abierto.id) }}"
+         target="_blank">
+        🧾 Ver comanda cocina
+      </a>
+    </div>
 
-      <div style="display:flex; gap:10px; align-items:center;">
-        <a class="btn" href="{{ url_for('ver_mesas') }}">↩️ Mesas</a>
+    <div style="margin-top:10px;">
+      {% set ns = namespace(total=0) %}
+      {% for d in pedido_abierto.detalles %}
+        {% set sub = d.producto.precio * d.cantidad %}
+        {% set ns.total = ns.total + sub %}
+        <div class="pedido-row" style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--line, #eee); padding:10px 0;">
+          <div>
+            <div class="item-name">{{ d.producto.nombre }}</div>
+            <div class="item-price">{{ d.producto.precio|cop }} c/u</div>
+          </div>
+          <div style="text-align:right;">
+            <div><b>× {{ d.cantidad }}</b></div>
+            <div class="small"><b>{{ sub|cop }}</b></div>
+          </div>
+        </div>
+      {% endfor %}
+      <div style="display:flex; justify-content:space-between; margin-top:10px; padding-top:8px; border-top:2px solid var(--line, #eee);">
+        <div class="small"><b>Total actual</b></div>
+        <div><b style="font-size:16px;">{{ ns.total|cop }}</b></div>
+      </div>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="menu-card" style="margin-bottom:12px;">
+    <b>🧾 Pedido actual</b>
+    <div class="note">Aún no hay productos agregados a esta mesa.</div>
+  </div>
+  {% endif %}
+
+  <!-- ===== FORMULARIO: SELECCIONAR PRODUCTOS ===== -->
+  <form id="pedido-form" method="POST">
+
+    <div class="menu-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <div>
+          <b>➕ {% if pedido_abierto %}Agregar al pedido{% else %}Nuevo pedido{% endif %}</b>
+          <div class="note">Selecciona cantidades y pulsa <em>Enviar pedido</em></div>
+        </div>
+        <button type="button" id="btn-limpiar" class="btn">🧹 Limpiar</button>
       </div>
     </div>
 
-    {% if error %}
-      <div class="menu-card" style="border-color: rgba(239,68,68,.4);">
-        <b>⚠️ {{ error }}</b>
-      </div>
-    {% endif %}
-
-    <!-- FORM: enviará producto_{id} = cantidad -->
-    <form id="pedido-form" method="POST">
-      <div class="menu-card">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-          <div>
-            <b>🍔 Productos</b>
-            <div class="note">Usa + / − para seleccionar</div>
+    <!-- LISTA POR CATEGORÍAS -->
+    <!-- Solo estos div tienen clase "item" — el JS opera SOLO sobre ellos -->
+    <div id="lista-productos">
+      {% for cat in categorias %}
+        {% set lista = productos_por_categoria.get(cat, []) %}
+        {% if lista|length > 0 %}
+        <div class="menu-card" style="margin-top:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <b>
+              {% if cat == "desayunos" %}🍳
+              {% elif cat == "almuerzos" %}🍛
+              {% elif cat == "porciones" %}🍟
+              {% elif cat == "bebidas calientes" %}☕
+              {% else %}🧊{% endif %}
+              {{ cat|title }}
+            </b>
+            <span class="small">{{ lista|length }} items</span>
           </div>
-          <button type="button" id="btn-limpiar" class="btn">🧹 Limpiar</button>
-        </div>
 
-        <div id="lista-productos">
-          {% for p in productos %}
-            <div class="item" data-id="{{ p.id }}" data-precio="{{ p.precio }}">
-              <div>
-                <div class="item-name">{{ p.nombre }}</div>
-                <div class="item-price">{{ p.precio|cop }}</div>
-              </div>
-
-              <div class="qtybox">
-                <button type="button" class="qbtn menos" aria-label="menos">−</button>
-
-                <!-- input real para enviar al backend -->
-                <input
-                  class="qval"
-                  type="text"
-                  inputmode="numeric"
-                  value="0"
-                  readonly
-                  name="producto_{{ p.id }}"
-                />
-
-                <button type="button" class="qbtn mas" aria-label="mas">+</button>
-              </div>
+          {% for p in lista %}
+          <div class="item" data-id="{{ p.id }}" data-precio="{{ p.precio }}">
+            <div>
+              <div class="item-name">{{ p.nombre }}</div>
+              <div class="item-price">{{ p.precio|cop }}</div>
             </div>
+            <div class="qtybox">
+              <button type="button" class="qbtn menos" aria-label="menos">−</button>
+              <input class="qval" type="number" inputmode="numeric"
+                     value="0" min="0" name="producto_{{ p.id }}" />
+              <button type="button" class="qbtn mas" aria-label="mas">+</button>
+            </div>
+          </div>
           {% endfor %}
         </div>
-      </div>
+        {% endif %}
+      {% endfor %}
+    </div>
 
-      <!-- Barra inferior: total + enviar -->
-      <div class="bottom-bar">
-        <div class="menu-card">
-          <div class="summary">
-            <div>
-              <div><b>🛒 Items:</b> <span id="items-count">0</span></div>
-              <div class="small">Total: <b id="total-val">$0</b></div>
-            </div>
-
-            <div style="min-width: 160px;">
-              <button type="submit" id="btn-enviar" class="bigbtn primary" disabled>
-                ✅ Enviar pedido
-              </button>
-              <div class="note" id="hint">Selecciona al menos 1 producto</div>
-            </div>
+    <!-- BARRA INFERIOR -->
+    <div class="bottom-bar">
+      <div class="menu-card">
+        <div class="summary">
+          <div>
+            <div><b>🛒 Items:</b> <span id="items-count">0</span></div>
+            <div class="small">Total a agregar: <b id="total-val">$0</b></div>
           </div>
-
-          <!-- resumen -->
-          <div id="resumen" class="note" style="margin-top:10px;"></div>
+          <div style="min-width:160px;">
+            <button type="submit" id="btn-enviar" class="bigbtn primary" disabled>
+              ✅ Enviar pedido
+            </button>
+            <div class="note" id="hint">Selecciona al menos 1 producto</div>
+          </div>
         </div>
+        <div id="resumen" class="note" style="margin-top:10px;"></div>
       </div>
+    </div>
 
-    </form>
-  </div>
+  </form>
 
-  <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+</div>
+<script src="{{ url_for('static', filename='js/menu.js') }}"></script>
 </body>
 </html>

@@ -3,13 +3,12 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(20), nullable=False)
-
-    # ✅ para activar/desactivar meseros
     activo = db.Column(db.Boolean, default=True)
 
     def set_password(self, password):
@@ -33,7 +32,7 @@ class Producto(db.Model):
     nombre = db.Column(db.String(100), nullable=False)
     precio = db.Column(db.Float, nullable=False)
     activo = db.Column(db.Boolean, default=True)
-
+    categoria = db.Column(db.String(30), nullable=False, default="almuerzos")
 
     def __repr__(self):
         return f"<Producto {self.nombre}>"
@@ -45,10 +44,11 @@ class Pedido(db.Model):
     mesero_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
     estado = db.Column(db.String(20), default="abierto")
-    fecha = db.Column(db.DateTime, default=datetime.now)
 
-    # ✅ pago/cierre
-    metodo_pago = db.Column(db.String(20), nullable=True)      # efectivo / transferencia / tarjeta
+    # ✅ SIEMPRE guardar en UTC para que to_bogota() convierta correctamente
+    fecha = db.Column(db.DateTime, default=datetime.utcnow)
+
+    metodo_pago = db.Column(db.String(20), nullable=True)
     monto_recibido = db.Column(db.Float, nullable=True)
     cambio = db.Column(db.Float, nullable=True)
     fecha_cierre = db.Column(db.DateTime, nullable=True)

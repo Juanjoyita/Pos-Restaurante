@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{% if modo=='nuevo' %}Nuevo producto{% else %}Editar producto{% endif %} - Rancho27</title>
+  <title>
+    {% if modo=='nuevo' %}Nuevo producto{% else %}Editar producto{% endif %} - Rancho27
+  </title>
 
   <style>
     :root{
@@ -40,7 +42,7 @@
     }
 
     a{ color: var(--text); text-decoration:none; }
-    .wrap{ width:min(680px, 100%); margin:0 auto; }
+    .wrap{ width:min(720px, 100%); margin:0 auto; }
 
     .topbar{
       display:flex;
@@ -51,10 +53,7 @@
       margin-bottom: 14px;
     }
 
-    .title{
-      display:grid;
-      gap:6px;
-    }
+    .title{ display:grid; gap:6px; }
     .badge{
       display:inline-flex;
       align-items:center;
@@ -108,7 +107,7 @@
       letter-spacing:.2px;
     }
 
-    .input{
+    .input, select{
       width:100%;
       padding: 12px 12px;
       margin-top: 8px;
@@ -120,7 +119,8 @@
       outline:none;
       transition: .15s;
     }
-    .input:focus{
+    select option{ color:#111; } /* para que se vean bien en dropdown */
+    .input:focus, select:focus{
       border-color: var(--emberB);
       box-shadow: 0 0 0 2px rgba(249,115,22,.15);
     }
@@ -156,6 +156,39 @@
       margin: 14px 0;
       border-radius:999px;
     }
+
+    .row2{
+      display:grid;
+      gap:12px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 640px){
+      .row2{ grid-template-columns: 1fr 1fr; }
+    }
+
+    .switchRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.12);
+    }
+    .toggle{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      font-weight:900;
+    }
+    .toggle input{
+      width: 18px;
+      height: 18px;
+      accent-color: rgb(249,115,22);
+      cursor:pointer;
+    }
   </style>
 </head>
 
@@ -170,9 +203,9 @@
         <div class="badge">🔥 Rancho27 · Menú</div>
         <div class="muted">
           {% if modo=='nuevo' %}
-            Crea un producto para que el mesero lo pueda vender.
+            Crea un producto y asígnale su categoría (para el menú del mesero).
           {% else %}
-            Actualiza nombre y precio del producto.
+            Edita nombre, precio, categoría y disponibilidad.
           {% endif %}
         </div>
       </div>
@@ -198,22 +231,52 @@
           required
           maxlength="80"
         >
-        <div class="helper">Tip: usa nombres cortos y claros (máx 80 caracteres).</div>
+        <div class="helper">Tip: nombres cortos y claros (máx 80 caracteres).</div>
 
         <div class="divider"></div>
 
-        <label>Precio</label>
-        <input
-          class="input"
-          type="number"
-          step="0.01"
-          name="precio"
-          value="{{ producto.precio if producto else '' }}"
-          placeholder="Ej: 15000"
-          required
-          min="0"
-        >
-        <div class="helper">En pesos COP. Ejemplo: 12000 (sin puntos).</div>
+        <div class="row2">
+          <div>
+            <label>Precio (COP)</label>
+            <input
+              class="input"
+              type="number"
+              step="0.01"
+              name="precio"
+              value="{{ producto.precio if producto else '' }}"
+              placeholder="Ej: 15000"
+              required
+              min="0"
+            >
+            <div class="helper">En pesos COP. Ejemplo: 12000 (sin puntos).</div>
+          </div>
+
+          <div>
+            <label>Categoría</label>
+            <select name="categoria" required>
+              {% set cat_actual = (producto.categoria if producto and producto.categoria else "almuerzos") %}
+              <option value="desayunos" {% if cat_actual=="desayunos" %}selected{% endif %}>🍳 Desayunos</option>
+              <option value="almuerzos" {% if cat_actual=="almuerzos" %}selected{% endif %}>🍛 Almuerzos</option>
+              <option value="porciones" {% if cat_actual=="porciones" %}selected{% endif %}>🍟 Porciones</option>
+              <option value="bebidas calientes" {% if cat_actual=="bebidas calientes" %}selected{% endif %}>☕ Bebidas calientes</option>
+              <option value="bebidas frías" {% if cat_actual=="bebidas frías" %}selected{% endif %}>🧊 Bebidas frías</option>
+            </select>
+            <div class="helper">Esto define en qué sección aparece en el menú del mesero.</div>
+          </div>
+        </div>
+
+        {% if modo == "editar" %}
+          <div class="switchRow">
+            <div>
+              <b>Disponibilidad</b>
+              <div class="muted">Si lo desactivas, no se mostrará al mesero.</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" name="activo" {% if producto and producto.activo %}checked{% endif %}>
+              Activo
+            </label>
+          </div>
+        {% endif %}
 
         <div class="actions">
           <a class="btn" href="{{ url_for('admin_productos') }}">Cancelar</a>

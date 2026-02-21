@@ -57,6 +57,7 @@
       display:flex;
       flex-direction:column;
       gap:6px;
+      min-width: 260px;
     }
     .badge{
       display:inline-flex;
@@ -86,12 +87,13 @@
       color: var(--text);
       cursor:pointer;
       font-weight:900;
-      transition: transform .06s ease, filter .15s ease;
+      transition: transform .06s ease, filter .15s ease, border-color .15s ease;
       user-select:none;
       white-space:nowrap;
     }
     .btn:hover{ transform: translateY(-1px); filter: brightness(1.06); }
     .btn:active{ transform: translateY(0px); }
+    .btn:focus{ outline:none; box-shadow: 0 0 0 2px rgba(249,115,22,.18); }
 
     .btn.blue{ border-color: var(--blueB); background: var(--blue); }
     .btn.ember{ border-color: var(--emberB); background: var(--ember); }
@@ -108,14 +110,6 @@
     }
 
     /* Search */
-    .search{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:space-between;
-      margin-top: 10px;
-    }
     .searchBox{
       display:flex;
       gap:10px;
@@ -141,7 +135,7 @@
     }
     .input::placeholder{ color: rgba(232,238,252,.35); }
 
-    /* Table */
+    /* Table / Desktop */
     .tableWrap{
       margin-top: 14px;
       overflow:auto;
@@ -152,7 +146,7 @@
     table{
       width:100%;
       border-collapse: collapse;
-      min-width: 780px;
+      min-width: 820px;
     }
     th, td{
       padding: 10px 10px;
@@ -168,9 +162,9 @@
       position: sticky;
       top: 0;
       z-index: 1;
+      backdrop-filter: blur(8px);
     }
     tr:hover td{ background: rgba(255,255,255,.03); }
-
     .right{ text-align:right; }
 
     /* Pills */
@@ -193,11 +187,7 @@
     .pill.off{ border-color: var(--redB); background: var(--red); }
     .pill.off .dot{ background: rgba(239,68,68,.95); }
 
-    .price{
-      font-weight: 900;
-      letter-spacing: .2px;
-    }
-
+    .price{ font-weight: 900; letter-spacing: .2px; }
     .actions{
       display:flex;
       gap:8px;
@@ -218,8 +208,35 @@
       margin-top: 12px;
     }
 
-    @media (max-width: 720px){
-      table{ min-width: 700px; }
+    /* ✅ Mobile: table -> cards */
+    .mobileCards{ display:none; margin-top: 12px; gap: 10px; flex-direction: column; }
+    .pCard{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      border-radius: 16px;
+      padding: 12px;
+    }
+    .pTop{
+      display:flex;
+      justify-content:space-between;
+      gap: 10px;
+      align-items:flex-start;
+    }
+    .pName{ font-weight: 1000; }
+    .pMeta{
+      display:flex;
+      gap: 8px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-top: 8px;
+    }
+    .pActions{ display:flex; gap:8px; flex-wrap:wrap; margin-top: 10px; }
+
+    @media (max-width: 760px){
+      .tableWrap{ display:none; }
+      .mobileCards{ display:flex; }
+      .btnrow{ width:100%; justify-content:flex-start; }
+      .input{ min-width: 100%; }
     }
   </style>
 </head>
@@ -244,18 +261,28 @@
     <!-- SEARCH -->
     <div class="card">
       <form method="GET" action="{{ url_for('admin_productos') }}" class="searchBox">
-        <input class="input" type="text" name="q" value="{{ q }}" placeholder="Buscar producto... (ej: costilla, chorizo, limonada)" />
+        <input
+          class="input"
+          type="text"
+          name="q"
+          value="{{ q }}"
+          placeholder="Buscar producto... (ej: costilla, chorizo, limonada)"
+          autocomplete="off"
+        />
         <button class="btn ember" type="submit">🔎 Buscar</button>
+
         {% if q %}
           <a class="btn" href="{{ url_for('admin_productos') }}">✖ Limpiar</a>
         {% endif %}
       </form>
     </div>
 
-    <!-- TABLE -->
+    <!-- LIST -->
     {% if productos|length == 0 %}
       <div class="empty">No hay productos para mostrar.</div>
     {% else %}
+
+      <!-- DESKTOP TABLE -->
       <div class="card" style="margin-top:12px;">
         <div class="tableWrap">
           <table>
@@ -285,7 +312,7 @@
 
                     <form method="POST" action="{{ url_for('admin_producto_toggle', producto_id=p.id) }}">
                       {% if p.activo %}
-                        <button class="btn red" type="submit">🚫 Desactivar</button>
+                        <button class="btn red" type="submit" onclick="return confirm('¿Desactivar {{ p.nombre }}?');">🚫 Desactivar</button>
                       {% else %}
                         <button class="btn green" type="submit">✅ Activar</button>
                       {% endif %}
@@ -302,6 +329,42 @@
           Tip: desactiva productos agotados para que no aparezcan en el menú del mesero.
         </div>
       </div>
+
+      <!-- ✅ MOBILE CARDS -->
+      <div class="mobileCards">
+        {% for p in productos %}
+          <div class="pCard">
+            <div class="pTop">
+              <div>
+                <div class="pName">🍽️ {{ p.nombre }}</div>
+                <div class="muted" style="margin-top:4px;">ID: {{ p.id }}</div>
+              </div>
+              <div class="price">{{ p.precio|cop }}</div>
+            </div>
+
+            <div class="pMeta">
+              {% if p.activo %}
+                <span class="pill on"><span class="dot"></span> Disponible</span>
+              {% else %}
+                <span class="pill off"><span class="dot"></span> No disponible</span>
+              {% endif %}
+            </div>
+
+            <div class="pActions">
+              <a class="btn" href="{{ url_for('admin_producto_editar', producto_id=p.id) }}">✏️ Editar</a>
+
+              <form method="POST" action="{{ url_for('admin_producto_toggle', producto_id=p.id) }}">
+                {% if p.activo %}
+                  <button class="btn red" type="submit" onclick="return confirm('¿Desactivar {{ p.nombre }}?');">🚫 Desactivar</button>
+                {% else %}
+                  <button class="btn green" type="submit">✅ Activar</button>
+                {% endif %}
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
     {% endif %}
 
   </div>

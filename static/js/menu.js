@@ -1,10 +1,16 @@
-function moneyCOP(n){
+// Scope: solo opera dentro de #lista-productos (el formulario de selección)
+// No toca los div.pedido-row del card de pedido actual
+
+const listaEl = document.getElementById("lista-productos");
+
+function moneyCOP(n) {
   n = Math.round(n || 0);
   return "$" + n.toLocaleString("es-CO");
 }
 
-function calcular(){
-  const items = document.querySelectorAll(".item");
+function calcular() {
+  // SOLO los .item dentro del formulario de productos
+  const items = listaEl ? listaEl.querySelectorAll(".item") : [];
   let total = 0;
   let count = 0;
   let resumen = [];
@@ -12,68 +18,74 @@ function calcular(){
   items.forEach(row => {
     const precio = Number(row.dataset.precio || 0);
     const input = row.querySelector("input.qval");
-    const qty = Number(input.value || 0);
+    const qty = Number(input ? input.value : 0);
 
-    if(qty > 0){
+    if (qty > 0) {
       count += qty;
       total += precio * qty;
-
       const name = row.querySelector(".item-name")?.textContent?.trim() || "Producto";
-      resumen.push(`${qty}x ${name}`);
+      resumen.push(`${qty}× ${name}`);
     }
   });
 
-  document.getElementById("items-count").textContent = String(count);
-  document.getElementById("total-val").textContent = moneyCOP(total);
+  const countEl = document.getElementById("items-count");
+  const totalEl = document.getElementById("total-val");
+  const btn     = document.getElementById("btn-enviar");
+  const hint    = document.getElementById("hint");
+  const resumenEl = document.getElementById("resumen");
 
-  const btn = document.getElementById("btn-enviar");
-  const hint = document.getElementById("hint");
-  if(count > 0){
-    btn.disabled = false;
-    hint.textContent = "Listo para enviar ✅";
-  }else{
-    btn.disabled = true;
-    hint.textContent = "Selecciona al menos 1 producto";
+  if (countEl) countEl.textContent = String(count);
+  if (totalEl) totalEl.textContent = moneyCOP(total);
+
+  if (btn && hint) {
+    if (count > 0) {
+      btn.disabled = false;
+      hint.textContent = "Listo para enviar ✅";
+    } else {
+      btn.disabled = true;
+      hint.textContent = "Selecciona al menos 1 producto";
+    }
   }
 
-  const resumenEl = document.getElementById("resumen");
-  resumenEl.textContent = resumen.length ? ("Resumen: " + resumen.join(" • ")) : "";
+  if (resumenEl) {
+    resumenEl.textContent = resumen.length ? "Resumen: " + resumen.join(" • ") : "";
+  }
 }
 
-function cambiarQty(row, delta){
+function cambiarQty(row, delta) {
   const input = row.querySelector("input.qval");
+  if (!input) return;
   let qty = Number(input.value || 0);
   qty = Math.max(0, qty + delta);
   input.value = String(qty);
   calcular();
 }
 
-document.addEventListener("click", (e) => {
-  const row = e.target.closest(".item");
-  if(!row) return;
+// Delegación de eventos: solo sobre lista-productos
+if (listaEl) {
+  listaEl.addEventListener("click", (e) => {
+    const row = e.target.closest(".item");
+    if (!row) return;
+    if (e.target.classList.contains("mas"))   cambiarQty(row, +1);
+    if (e.target.classList.contains("menos")) cambiarQty(row, -1);
+  });
+}
 
-  if(e.target.classList.contains("mas")){
-    cambiarQty(row, +1);
-  }
-  if(e.target.classList.contains("menos")){
-    cambiarQty(row, -1);
-  }
-});
-
+// Limpiar
 document.getElementById("btn-limpiar")?.addEventListener("click", () => {
-  document.querySelectorAll("input.qval").forEach(i => i.value = "0");
+  if (listaEl) {
+    listaEl.querySelectorAll("input.qval").forEach(i => i.value = "0");
+  }
   calcular();
 });
 
+// Submit guard
 document.getElementById("pedido-form")?.addEventListener("submit", (e) => {
-  // pequeña confirmación rápida
-  const count = Number(document.getElementById("items-count").textContent || 0);
-  if(count <= 0){
+  const count = Number(document.getElementById("items-count")?.textContent || 0);
+  if (count <= 0) {
     e.preventDefault();
-    return;
   }
-  // si quieres confirmación:
-  // if(!confirm("¿Enviar pedido?")) e.preventDefault();
 });
 
+// Inicializar
 calcular();

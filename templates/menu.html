@@ -6,6 +6,33 @@
   <title>Mesa {{ mesa.numero }} - Menú</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
   <style>
+    /* ── Acordeón de categorías ── */
+    .cat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      padding: 4px 0;
+    }
+    .cat-header:hover { opacity: .8; }
+    .cat-arrow {
+      font-size: 13px;
+      transition: transform .25s ease;
+      color: #888;
+    }
+    .cat-body {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height .3s ease, opacity .25s ease;
+      opacity: 0;
+    }
+    .cat-body.open {
+      max-height: 2000px;   /* suficientemente grande */
+      opacity: 1;
+    }
+    .cat-arrow.open { transform: rotate(180deg); }
+
     /* ── Controles de edición en pedido actual ── */
     .detalle-row {
       display: flex;
@@ -46,6 +73,21 @@
       min-width: 24px;
       text-align: center;
     }
+
+    /* Badge de items seleccionados en la cabecera de categoría */
+    .cat-badge {
+      display: inline-block;
+      background: #f97316;
+      color: #fff;
+      border-radius: 99px;
+      padding: 1px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-left: 6px;
+      min-width: 20px;
+      text-align: center;
+    }
+    .cat-badge.hidden { display: none; }
   </style>
 </head>
 <body>
@@ -69,10 +111,7 @@
   </div>
   {% endif %}
 
-  <!-- ===== PEDIDO ACTUAL =====
-       usa clase "detalle-row", NO "item", para que el JS
-       del formulario no la cuente ni interfiera con data-precio.
-  -->
+  <!-- ===== PEDIDO ACTUAL ===== -->
   {% if pedido_abierto and pedido_abierto.detalles|length > 0 %}
   <div class="menu-card" style="border-color: rgba(249,115,22,.35); margin-bottom:12px;">
     <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
@@ -92,46 +131,32 @@
       {% for d in pedido_abierto.detalles %}
         {% set sub = d.producto.precio * d.cantidad %}
         {% set ns.total = ns.total + sub %}
-
         <div class="detalle-row">
-          <!-- Info -->
           <div class="detalle-info">
             <div class="item-name">{{ d.producto.nombre }}</div>
             <div class="item-price">{{ d.producto.precio|cop }} c/u · <b>{{ sub|cop }}</b></div>
           </div>
-
-          <!-- Controles -->
           <div class="detalle-controls">
-
-            <!-- Restar 1 (si llega a 0, elimina el ítem) -->
             <form method="POST"
                   action="{{ url_for('editar_detalle', pedido_id=pedido_abierto.id, detalle_id=d.id) }}">
               <input type="hidden" name="accion" value="restar">
               <button type="submit" class="ctrl-btn restar" title="Quitar uno">−</button>
             </form>
-
             <span class="ctrl-qty">{{ d.cantidad }}</span>
-
-            <!-- Sumar 1 -->
             <form method="POST"
                   action="{{ url_for('editar_detalle', pedido_id=pedido_abierto.id, detalle_id=d.id) }}">
               <input type="hidden" name="accion" value="sumar">
               <button type="submit" class="ctrl-btn sumar" title="Agregar uno">＋</button>
             </form>
-
-            <!-- Eliminar ítem completo -->
             <form method="POST"
                   action="{{ url_for('editar_detalle', pedido_id=pedido_abierto.id, detalle_id=d.id) }}"
                   onsubmit="return confirm('¿Eliminar {{ d.producto.nombre }} del pedido?')">
               <input type="hidden" name="accion" value="eliminar">
               <button type="submit" class="ctrl-btn eliminar" title="Eliminar ítem">🗑️</button>
             </form>
-
           </div>
         </div>
       {% endfor %}
-
-      <!-- Total acumulado -->
       <div style="display:flex; justify-content:space-between; margin-top:10px;
                   padding-top:8px; border-top:2px solid var(--line, #eee);">
         <div class="small"><b>Total actual</b></div>
@@ -154,46 +179,60 @@
       <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
         <div>
           <b>➕ {% if pedido_abierto %}Agregar al pedido{% else %}Nuevo pedido{% endif %}</b>
-          <div class="note">Selecciona cantidades y pulsa <em>Enviar pedido</em></div>
+          <div class="note">Toca una categoría para desplegarla</div>
         </div>
         <button type="button" id="btn-limpiar" class="btn">🧹 Limpiar</button>
       </div>
     </div>
 
-    <!-- LISTA POR CATEGORÍAS -->
-    <!-- Solo estos div tienen clase "item" — el JS opera SOLO sobre ellos -->
+    <!-- ===== ACORDEÓN POR CATEGORÍAS ===== -->
     <div id="lista-productos">
       {% for cat in categorias %}
         {% set lista = productos_por_categoria.get(cat, []) %}
         {% if lista|length > 0 %}
-        <div class="menu-card" style="margin-top:12px;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <b>
-              {% if cat == "especialidad" %}⭐
-              {% elif cat == "desayunos" %}🍳
-              {% elif cat == "almuerzos" %}🍛
-              {% elif cat == "porciones" %}🍟
-              {% elif cat == "bebidas calientes" %}☕
-              {% else %}🧊{% endif %}
-              {{ cat|title }}
-            </b>
-            <span class="small">{{ lista|length }} items</span>
+
+        <div class="menu-card" style="margin-top:8px; padding-bottom:4px;">
+
+          <!-- Cabecera clicable -->
+          <div class="cat-header" data-cat="{{ cat }}">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <b>
+                {% if cat == "especialidad" %}⭐
+                {% elif cat == "desayunos" %}🍳
+                {% elif cat == "almuerzos" %}🍛
+                {% elif cat == "porciones" %}🍟
+                {% elif cat == "bebidas calientes" %}☕
+                {% else %}🧊{% endif %}
+                {{ cat|title }}
+              </b>
+              <!-- Badge se muestra cuando el mesero selecciona items en esa cat -->
+              <span class="cat-badge hidden" id="badge-{{ loop.index }}">0</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="small">{{ lista|length }} items</span>
+              <span class="cat-arrow" id="arrow-{{ loop.index }}">▼</span>
+            </div>
           </div>
 
-          {% for p in lista %}
-          <div class="item" data-id="{{ p.id }}" data-precio="{{ p.precio }}">
-            <div>
-              <div class="item-name">{{ p.nombre }}</div>
-              <div class="item-price">{{ p.precio|cop }}</div>
+          <!-- Cuerpo colapsable -->
+          <div class="cat-body" id="body-{{ loop.index }}" data-badge="badge-{{ loop.index }}">
+            {% for p in lista %}
+            <div class="item" data-id="{{ p.id }}" data-precio="{{ p.precio }}"
+                 data-cat-body="body-{{ loop.index }}">
+              <div>
+                <div class="item-name">{{ p.nombre }}</div>
+                <div class="item-price">{{ p.precio|cop }}</div>
+              </div>
+              <div class="qtybox">
+                <button type="button" class="qbtn menos" aria-label="menos">−</button>
+                <input class="qval" type="number" inputmode="numeric"
+                       value="0" min="0" name="producto_{{ p.id }}" />
+                <button type="button" class="qbtn mas" aria-label="mas">+</button>
+              </div>
             </div>
-            <div class="qtybox">
-              <button type="button" class="qbtn menos" aria-label="menos">−</button>
-              <input class="qval" type="number" inputmode="numeric"
-                     value="0" min="0" name="producto_{{ p.id }}" />
-              <button type="button" class="qbtn mas" aria-label="mas">+</button>
-            </div>
+            {% endfor %}
           </div>
-          {% endfor %}
+
         </div>
         {% endif %}
       {% endfor %}
@@ -221,6 +260,64 @@
   </form>
 
 </div>
+
 <script src="{{ url_for('static', filename='js/menu.js') }}"></script>
+<script>
+// ── Acordeón ──────────────────────────────────────────────
+document.querySelectorAll(".cat-header").forEach(header => {
+  header.addEventListener("click", () => {
+    const idx   = header.dataset.cat;
+    // busca el body y arrow dentro del mismo menu-card padre
+    const card  = header.closest(".menu-card");
+    const body  = card.querySelector(".cat-body");
+    const arrow = card.querySelector(".cat-arrow");
+
+    const isOpen = body.classList.contains("open");
+    body.classList.toggle("open", !isOpen);
+    arrow.classList.toggle("open", !isOpen);
+  });
+});
+
+// ── Badge por categoría: muestra cuántos items tienen qty > 0 ──
+// Se ejecuta cada vez que calcular() en menu.js actualiza los inputs
+// Sobreescribimos calcular para agregar el badge update
+document.addEventListener("DOMContentLoaded", () => {
+  // Espera a que menu.js cargue y defina calcular,
+  // luego parchamos los eventos de qty para actualizar badges
+  document.getElementById("lista-productos")
+    .addEventListener("input", actualizarBadges);
+
+  // También al hacer click en + / -
+  document.getElementById("lista-productos")
+    .addEventListener("click", () => {
+      // pequeño delay para que el input ya tenga el valor nuevo
+      setTimeout(actualizarBadges, 10);
+    });
+
+  // Al limpiar
+  document.getElementById("btn-limpiar")
+    ?.addEventListener("click", () => setTimeout(actualizarBadges, 10));
+});
+
+function actualizarBadges() {
+  document.querySelectorAll(".cat-body").forEach(body => {
+    const badgeId = body.dataset.badge;
+    const badge   = document.getElementById(badgeId);
+    if (!badge) return;
+
+    let total = 0;
+    body.querySelectorAll("input.qval").forEach(input => {
+      total += Number(input.value || 0);
+    });
+
+    if (total > 0) {
+      badge.textContent = total;
+      badge.classList.remove("hidden");
+    } else {
+      badge.classList.add("hidden");
+    }
+  });
+}
+</script>
 </body>
 </html>

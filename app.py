@@ -37,7 +37,7 @@ login_manager.login_view = "login"
 
 # ---------- CATEGORÍAS ----------
 CATEGORIAS = [
-    "especialidad"
+    "especialidad",
     "desayunos",
     "almuerzos",
     "porciones",
@@ -51,10 +51,6 @@ BOG = ZoneInfo("America/Bogota")
 
 
 def to_bogota(dt: datetime) -> datetime:
-    """
-    Convierte cualquier datetime a Bogotá (UTC-5).
-    Si viene naive (sin tzinfo), asumimos que está en UTC.
-    """
     if not dt:
         return dt
     if dt.tzinfo is None:
@@ -63,19 +59,14 @@ def to_bogota(dt: datetime) -> datetime:
 
 
 def bogota_now() -> datetime:
-    """Retorna el datetime actual en hora Bogotá."""
     return datetime.now(tz=BOG)
 
 
 def bogota_day_to_utc_range(d: date):
-    """
-    Día calendario en Bogotá -> rango UTC naive
-    (para comparar contra datetimes guardados en UTC naive en la DB).
-    """
     inicio_bog = datetime.combine(d, time.min).replace(tzinfo=BOG)
-    fin_bog = datetime.combine(d, time.max).replace(tzinfo=BOG)
+    fin_bog    = datetime.combine(d, time.max).replace(tzinfo=BOG)
     inicio_utc = inicio_bog.astimezone(UTC).replace(tzinfo=None)
-    fin_utc = fin_bog.astimezone(UTC).replace(tzinfo=None)
+    fin_utc    = fin_bog.astimezone(UTC).replace(tzinfo=None)
     return inicio_utc, fin_utc
 
 
@@ -108,42 +99,33 @@ def seed_mesas(total=20):
         db.session.commit()
         print(f"✅ {total} mesas creadas")
     else:
-        print(f"ℹ️  Ya existen {existentes} mesas, no se crearon nuevas")
+        print(f"ℹ️  Ya existen {existentes} mesas")
 
 
 # ---------- ARRANQUE ----------
 with app.app_context():
     try:
-        # ✅ Muestra a qué DB estás conectado (primeros 40 chars)
         db_uri = app.config["SQLALCHEMY_DATABASE_URI"]
         print(f"🔌 Conectando a: {db_uri[:40]}...")
-
         if "sqlite" in db_uri:
             print("⚠️  ADVERTENCIA: usando SQLite, no PostgreSQL.")
-            print("⚠️  Verifica que DATABASE_URL esté configurada en Render → Environment.")
-
         db.create_all()
         print("✅ Tablas verificadas / creadas")
-
         seed_users()
         seed_mesas(20)
-
-        # ✅ Confirmación final con conteo real desde la DB
         total_usuarios = User.query.count()
-        total_mesas = Mesa.query.count()
+        total_mesas    = Mesa.query.count()
         print(f"📊 Estado DB → Usuarios: {total_usuarios} | Mesas: {total_mesas}")
         print("✅ DB lista")
-
     except Exception as e:
         print(f"❌ Error al inicializar DB: {e}")
-        raise  # Re-lanza para que Render lo marque como fallo y no arranque roto
+        raise
 
 
 # ---------- FILTROS DE TEMPLATE ----------
 
 @app.template_filter("hora_bogota")
 def hora_bogota_filter(dt):
-    """Muestra solo la hora HH:MM en hora Bogotá."""
     if not dt:
         return ""
     try:
@@ -154,7 +136,6 @@ def hora_bogota_filter(dt):
 
 @app.template_filter("fecha_bogota")
 def fecha_bogota_filter(dt):
-    """Muestra solo la fecha DD/MM/YYYY en hora Bogotá."""
     if not dt:
         return ""
     try:
@@ -165,7 +146,6 @@ def fecha_bogota_filter(dt):
 
 @app.template_filter("datetime_bogota")
 def datetime_bogota_filter(dt):
-    """Muestra fecha y hora completa DD/MM/YYYY HH:MM en hora Bogotá."""
     if not dt:
         return ""
     try:
@@ -200,9 +180,7 @@ def login():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
-
         user = User.query.filter_by(username=username).first()
-
         if user and user.check_password(password):
             if hasattr(user, "activo") and not user.activo:
                 error = "Usuario desactivado. Contacta al administrador."
@@ -218,7 +196,6 @@ def login():
                 error = "Rol desconocido."
         else:
             error = "Usuario o contraseña incorrectos."
-
     return render_template("login.html", error=error)
 
 
@@ -248,32 +225,76 @@ def mesas_json():
     return jsonify({"mesas": [{"id": m.id, "numero": m.numero, "estado": m.estado} for m in mesas]})
 
 
+# ---------- MESERO: EDITAR DETALLE DE PEDIDO ABIERTO ----------
+@app.route("/pedido/<int:pedido_id>/detalle/<int:detalle_id>/editar", methods=["POST"])
+@login_required
+def editar_detalle(pedido_id, detalle_id):
+    """
+    Cambia la cantidad de un ítem del pedido abierto.
+    Si la nueva cantidad es 0, elimina el ítem.
+    Si el pedido queda sin ítems, lo cierra y libera la mesa.
+    Solo el mesero dueño del pedido puede editarlo.
+    """
+    if (current_user.role or "").lower() != "mesero":
+        return redirect(url_for("login"))
+
+    pedido  = Pedido.query.get_or_404(pedido_id)
+    detalle = PedidoDetalle.query.get_or_404(detalle_id)
+
+    # Seguridad: el pedido debe pertenecer al mesero logueado
+    if pedido.mesero_id != current_user.id:
+        return redirect(url_for("ver_mesas"))
+
+    # Seguridad: el detalle debe pertenecer al pedido
+    if detalle.pedido_id != pedido.id:
+        return redirect(url_for("menu_mesa", mesa_id=pedido.mesa_id))
+
+    accion = request.form.get("accion", "")  # "sumar", "restar", "eliminar"
+
+    if accion == "eliminar" or (accion == "restar" and detalle.cantidad <= 1):
+        db.session.delete(detalle)
+    elif accion == "sumar":
+        detalle.cantidad += 1
+    elif accion == "restar":
+        detalle.cantidad -= 1
+
+    db.session.flush()
+
+    # Si el pedido quedó sin ítems, liberamos la mesa
+    ítems_restantes = PedidoDetalle.query.filter_by(pedido_id=pedido.id).count()
+    if ítems_restantes == 0:
+        pedido.estado = "cancelado"
+        mesa = db.session.get(Mesa, pedido.mesa_id)
+        if mesa:
+            mesa.estado = "libre"
+
+    db.session.commit()
+    return redirect(url_for("menu_mesa", mesa_id=pedido.mesa_id))
+
+
 # ---------- MESERO: COMANDA ----------
 @app.route("/mesero/comanda/<int:pedido_id>")
 @login_required
 def comanda_mesero(pedido_id):
     if (current_user.role or "").lower() != "mesero":
         return redirect(url_for("login"))
-
     pedido = Pedido.query.get_or_404(pedido_id)
-
     if pedido.mesero_id != current_user.id:
         return redirect(url_for("ver_mesas"))
 
     items = []
     total = 0.0
     for d in pedido.detalles:
-        precio = float(d.producto.precio)
+        precio   = float(d.producto.precio)
         cantidad = int(d.cantidad)
         subtotal = precio * cantidad
-        total += subtotal
+        total   += subtotal
         items.append({
-            "nombre": d.producto.nombre,
+            "nombre":   d.producto.nombre,
             "cantidad": cantidad,
-            "precio": precio,
+            "precio":   precio,
             "subtotal": subtotal
         })
-
     return render_template("comanda.html", pedido=pedido, items=items, total=total)
 
 
@@ -377,13 +398,12 @@ def admin_panel():
     if (current_user.role or "").lower() != "admin":
         return redirect(url_for("login"))
 
-    pedidos_abiertos_count = Pedido.query.filter_by(estado="abierto").count()
-    productos_total_count = Producto.query.count()
+    pedidos_abiertos_count  = Pedido.query.filter_by(estado="abierto").count()
+    productos_total_count   = Producto.query.count()
     productos_activos_count = Producto.query.filter_by(activo=True).count()
-    meseros_activos_count = User.query.filter(
+    meseros_activos_count   = User.query.filter(
         func.lower(User.role) == "mesero", User.activo == True
     ).count()
-
     pedidos_cerrados = (
         Pedido.query
         .filter_by(estado="cerrado")
@@ -391,7 +411,6 @@ def admin_panel():
         .limit(20)
         .all()
     )
-
     return render_template(
         "admin.html",
         pedidos_cerrados=pedidos_cerrados,
@@ -428,27 +447,25 @@ def admin_pedidos_json():
         detalles = []
         total = 0.0
         for d in p.detalles:
-            precio = float(d.producto.precio)
+            precio   = float(d.producto.precio)
             cantidad = int(d.cantidad)
             subtotal = precio * cantidad
-            total += subtotal
+            total   += subtotal
             detalles.append({
-                "nombre": d.producto.nombre,
+                "nombre":   d.producto.nombre,
                 "cantidad": cantidad,
-                "precio": precio,
+                "precio":   precio,
                 "subtotal": subtotal
             })
-
         data.append({
-            "id": p.id,
-            "mesa": p.mesa.numero,
-            "mesero": p.mesero.username,
-            "fecha": to_bogota(p.fecha).strftime("%d/%m/%Y %H:%M") if p.fecha else "",
-            "hora": hora_bogota_filter(p.fecha),
+            "id":       p.id,
+            "mesa":     p.mesa.numero,
+            "mesero":   p.mesero.username,
+            "fecha":    to_bogota(p.fecha).strftime("%d/%m/%Y %H:%M") if p.fecha else "",
+            "hora":     hora_bogota_filter(p.fecha),
             "detalles": detalles,
-            "total": total
+            "total":    total
         })
-
     return jsonify({"pedidos": data})
 
 
@@ -458,16 +475,14 @@ def admin_pedidos_json():
 def cerrar_pedido(pedido_id):
     if (current_user.role or "").lower() != "admin":
         return redirect(url_for("login"))
-
     pedido = Pedido.query.get_or_404(pedido_id)
     if pedido.estado != "cerrado":
-        pedido.estado = "cerrado"
+        pedido.estado       = "cerrado"
         pedido.fecha_cierre = datetime.utcnow()
         mesa = db.session.get(Mesa, pedido.mesa_id)
         if mesa:
             mesa.estado = "libre"
         db.session.commit()
-
     return redirect(url_for("admin_panel"))
 
 
@@ -478,8 +493,8 @@ def cobrar_pedido(pedido_id):
     if (current_user.role or "").lower() != "admin":
         return redirect(url_for("login"))
 
-    pedido = Pedido.query.get_or_404(pedido_id)
-    metodo_pago = (request.form.get("metodo_pago") or "").strip().lower()
+    pedido             = Pedido.query.get_or_404(pedido_id)
+    metodo_pago        = (request.form.get("metodo_pago") or "").strip().lower()
     monto_recibido_raw = (request.form.get("monto_recibido") or "").strip()
 
     total = 0.0
@@ -497,18 +512,17 @@ def cobrar_pedido(pedido_id):
         cambio = monto_recibido - total
         if cambio < 0:
             return redirect(url_for("ver_factura", pedido_id=pedido.id, error="pago_insuficiente"))
-
     elif metodo_pago in ["transferencia", "tarjeta"]:
         monto_recibido = total
         cambio = 0.0
     else:
         return redirect(url_for("ver_factura", pedido_id=pedido.id, error="metodo_invalido"))
 
-    pedido.estado = "cerrado"
-    pedido.metodo_pago = metodo_pago
+    pedido.estado         = "cerrado"
+    pedido.metodo_pago    = metodo_pago
     pedido.monto_recibido = monto_recibido
-    pedido.cambio = cambio
-    pedido.fecha_cierre = datetime.utcnow()
+    pedido.cambio         = cambio
+    pedido.fecha_cierre   = datetime.utcnow()
 
     mesa = db.session.get(Mesa, pedido.mesa_id)
     if mesa:
@@ -554,8 +568,8 @@ def caja_dia():
         .all()
     )
 
-    total_dia = 0.0
-    conteo = len(pedidos)
+    total_dia  = 0.0
+    conteo     = len(pedidos)
     por_metodo = {"efectivo": 0.0, "transferencia": 0.0, "tarjeta": 0.0, "otro": 0.0}
     pedidos_info = []
     top = {}
@@ -569,30 +583,25 @@ def caja_dia():
             if nombre not in top:
                 top[nombre] = {"cantidad": 0, "ventas": 0.0}
             top[nombre]["cantidad"] += int(d.cantidad)
-            top[nombre]["ventas"] += subtotal
-
+            top[nombre]["ventas"]   += subtotal
         total_dia += total_pedido
-
         metodo = (p.metodo_pago or "otro").lower()
         if metodo not in por_metodo:
             metodo = "otro"
         por_metodo[metodo] += total_pedido
-
         hora_ok = to_bogota(p.fecha_cierre).strftime("%H:%M") if p.fecha_cierre else ""
         pedidos_info.append({
-            "id": p.id,
-            "mesa": p.mesa.numero,
-            "hora": hora_ok,
+            "id":     p.id,
+            "mesa":   p.mesa.numero,
+            "hora":   hora_ok,
             "metodo": (p.metodo_pago or "otro"),
-            "total": total_pedido,
+            "total":  total_pedido,
         })
 
     ticket_promedio = (total_dia / conteo) if conteo > 0 else 0.0
-
     top_lista = sorted(
         [{"nombre": k, "cantidad": v["cantidad"], "ventas": v["ventas"]} for k, v in top.items()],
-        key=lambda x: x["ventas"],
-        reverse=True
+        key=lambda x: x["ventas"], reverse=True
     )[:10]
 
     return render_template(
@@ -616,24 +625,22 @@ def ver_factura(pedido_id):
         return redirect(url_for("login"))
 
     pedido = Pedido.query.get_or_404(pedido_id)
-
-    items = []
-    total = 0.0
+    items  = []
+    total  = 0.0
     for d in pedido.detalles:
-        precio = float(d.producto.precio)
+        precio   = float(d.producto.precio)
         cantidad = int(d.cantidad)
         subtotal = precio * cantidad
-        total += subtotal
+        total   += subtotal
         items.append({
-            "nombre": d.producto.nombre,
+            "nombre":   d.producto.nombre,
             "cantidad": cantidad,
-            "precio": precio,
+            "precio":   precio,
             "subtotal": subtotal
         })
 
     auto_print = request.args.get("print") == "1"
-    error = request.args.get("error")
-
+    error      = request.args.get("error")
     return render_template(
         "factura.html",
         pedido=pedido,
@@ -659,24 +666,19 @@ def admin_usuarios():
 def admin_usuario_nuevo():
     if not solo_admin():
         return redirect(url_for("login"))
-
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
-        role = "mesero"
-
+        role     = "mesero"
         if not username or not password:
             return render_template("admin_usuario_form.html", error="Faltan datos.", usuario=None)
-
         if User.query.filter_by(username=username).first():
             return render_template("admin_usuario_form.html", error="Ese usuario ya existe.", usuario=None)
-
         u = User(username=username, role=role, activo=True)
         u.set_password(password)
         db.session.add(u)
         db.session.commit()
         return redirect(url_for("admin_usuarios"))
-
     return render_template("admin_usuario_form.html", error=None, usuario=None)
 
 
@@ -685,7 +687,6 @@ def admin_usuario_nuevo():
 def admin_usuario_toggle(user_id):
     if not solo_admin():
         return redirect(url_for("login"))
-
     u = db.session.get(User, user_id)
     if not u:
         return redirect(url_for("admin_usuarios"))
@@ -693,7 +694,6 @@ def admin_usuario_toggle(user_id):
         return redirect(url_for("admin_usuarios"))
     if u.id == current_user.id:
         return redirect(url_for("admin_usuarios"))
-
     u.activo = not bool(u.activo)
     db.session.commit()
     return redirect(url_for("admin_usuarios"))
@@ -704,19 +704,16 @@ def admin_usuario_toggle(user_id):
 def admin_usuario_eliminar(user_id):
     if not solo_admin():
         return redirect(url_for("login"))
-
     u = db.session.get(User, user_id)
     if not u:
         return redirect(url_for("admin_usuarios"))
     if (u.role or "").lower() != "mesero":
         return redirect(url_for("admin_usuarios"))
-
     tiene_pedidos = Pedido.query.filter_by(mesero_id=u.id).first()
     if tiene_pedidos:
         u.activo = False
         db.session.commit()
         return redirect(url_for("admin_usuarios"))
-
     db.session.delete(u)
     db.session.commit()
     return redirect(url_for("admin_usuarios"))
@@ -739,15 +736,13 @@ def admin_productos():
 def admin_producto_nuevo():
     if not solo_admin():
         return redirect(url_for("login"))
-
     error = None
     if request.method == "POST":
-        nombre = request.form.get("nombre", "").strip()
+        nombre     = request.form.get("nombre", "").strip()
         precio_str = request.form.get("precio", "").strip()
-        categoria = (request.form.get("categoria") or "almuerzos").strip().lower()
+        categoria  = (request.form.get("categoria") or "almuerzos").strip().lower()
         if categoria not in CATEGORIAS:
             categoria = "almuerzos"
-
         if not nombre:
             error = "El nombre es obligatorio."
         else:
@@ -757,15 +752,12 @@ def admin_producto_nuevo():
                     raise ValueError()
             except ValueError:
                 error = "Precio inválido. Ej: 12000"
-
         if error:
             return render_template("admin_producto_form.html", modo="nuevo", producto=None, error=error, categorias=CATEGORIAS)
-
         p = Producto(nombre=nombre, precio=precio, activo=True, categoria=categoria)
         db.session.add(p)
         db.session.commit()
         return redirect(url_for("admin_productos"))
-
     return render_template("admin_producto_form.html", modo="nuevo", producto=None, error=error, categorias=CATEGORIAS)
 
 
@@ -774,18 +766,15 @@ def admin_producto_nuevo():
 def admin_producto_editar(producto_id):
     if not solo_admin():
         return redirect(url_for("login"))
-
     producto = Producto.query.get_or_404(producto_id)
     error = None
-
     if request.method == "POST":
-        nombre = request.form.get("nombre", "").strip()
+        nombre     = request.form.get("nombre", "").strip()
         precio_str = request.form.get("precio", "").strip()
-        activo = request.form.get("activo") == "on"
-        categoria = (request.form.get("categoria") or (producto.categoria or "almuerzos")).strip().lower()
+        activo     = request.form.get("activo") == "on"
+        categoria  = (request.form.get("categoria") or (producto.categoria or "almuerzos")).strip().lower()
         if categoria not in CATEGORIAS:
             categoria = "almuerzos"
-
         if not nombre:
             error = "El nombre es obligatorio."
         else:
@@ -795,24 +784,21 @@ def admin_producto_editar(producto_id):
                     raise ValueError()
             except ValueError:
                 error = "Precio inválido. Ej: 12000"
-
         if error:
-            producto.nombre = nombre
+            producto.nombre    = nombre
             try:
                 producto.precio = float(precio_str)
             except Exception:
                 pass
-            producto.activo = activo
+            producto.activo    = activo
             producto.categoria = categoria
             return render_template("admin_producto_form.html", modo="editar", producto=producto, error=error, categorias=CATEGORIAS)
-
-        producto.nombre = nombre
-        producto.precio = precio
-        producto.activo = activo
+        producto.nombre    = nombre
+        producto.precio    = precio
+        producto.activo    = activo
         producto.categoria = categoria
         db.session.commit()
         return redirect(url_for("admin_productos"))
-
     return render_template("admin_producto_form.html", modo="editar", producto=producto, error=error, categorias=CATEGORIAS)
 
 
@@ -832,14 +818,12 @@ def admin_producto_toggle(producto_id):
 def admin_producto_eliminar(producto_id):
     if not solo_admin():
         return redirect(url_for("login"))
-
     producto = Producto.query.get_or_404(producto_id)
     usado = PedidoDetalle.query.filter_by(producto_id=producto.id).first()
     if usado:
         producto.activo = False
         db.session.commit()
         return redirect(url_for("admin_productos"))
-
     db.session.delete(producto)
     db.session.commit()
     return redirect(url_for("admin_productos"))

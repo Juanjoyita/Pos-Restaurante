@@ -5,6 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Mesa {{ mesa.numero }} - Menú</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <style>
+    /* ── Controles de edición en pedido actual ── */
+    .detalle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--line, #eee);
+      padding: 10px 0;
+      gap: 8px;
+    }
+    .detalle-info { flex: 1; }
+    .detalle-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .detalle-controls form { margin: 0; }
+    .ctrl-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--line, #ddd);
+      background: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      line-height: 1;
+      transition: background .15s;
+    }
+    .ctrl-btn:active   { background: #f3f4f6; }
+    .ctrl-btn.restar   { color: #f97316; border-color: rgba(249,115,22,.3); }
+    .ctrl-btn.sumar    { color: #22c55e; border-color: rgba(34,197,94,.3);  }
+    .ctrl-btn.eliminar { color: #ef4444; border-color: rgba(239,68,68,.3); font-size:14px; }
+    .ctrl-qty {
+      font-weight: 700;
+      font-size: 15px;
+      min-width: 24px;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
 <div class="container">
@@ -28,7 +70,7 @@
   {% endif %}
 
   <!-- ===== PEDIDO ACTUAL =====
-       IMPORTANTE: usa clase "pedido-row", NO "item", para que el JS
+       usa clase "detalle-row", NO "item", para que el JS
        del formulario no la cuente ni interfiera con data-precio.
   -->
   {% if pedido_abierto and pedido_abierto.detalles|length > 0 %}
@@ -36,7 +78,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
       <div>
         <b>🔥 Pedido actual — Mesa {{ mesa.numero }}</b>
-        <div class="note">Agrega más productos abajo y pulsa <em>Enviar pedido</em> para acumularlos.</div>
+        <div class="note">Usa ＋ / － para ajustar · 🗑️ para eliminar un ítem.</div>
       </div>
       <a class="btn"
          href="{{ url_for('comanda_mesero', pedido_id=pedido_abierto.id) }}"
@@ -50,18 +92,48 @@
       {% for d in pedido_abierto.detalles %}
         {% set sub = d.producto.precio * d.cantidad %}
         {% set ns.total = ns.total + sub %}
-        <div class="pedido-row" style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--line, #eee); padding:10px 0;">
-          <div>
+
+        <div class="detalle-row">
+          <!-- Info -->
+          <div class="detalle-info">
             <div class="item-name">{{ d.producto.nombre }}</div>
-            <div class="item-price">{{ d.producto.precio|cop }} c/u</div>
+            <div class="item-price">{{ d.producto.precio|cop }} c/u · <b>{{ sub|cop }}</b></div>
           </div>
-          <div style="text-align:right;">
-            <div><b>× {{ d.cantidad }}</b></div>
-            <div class="small"><b>{{ sub|cop }}</b></div>
+
+          <!-- Controles -->
+          <div class="detalle-controls">
+
+            <!-- Restar 1 (si llega a 0, elimina el ítem) -->
+            <form method="POST"
+                  action="{{ url_for('editar_detalle', pedido_id=pedido_abierto.id, detalle_id=d.id) }}">
+              <input type="hidden" name="accion" value="restar">
+              <button type="submit" class="ctrl-btn restar" title="Quitar uno">−</button>
+            </form>
+
+            <span class="ctrl-qty">{{ d.cantidad }}</span>
+
+            <!-- Sumar 1 -->
+            <form method="POST"
+                  action="{{ url_for('editar_detalle', pedido_id=pedido_abierto.id, detalle_id=d.id) }}">
+              <input type="hidden" name="accion" value="sumar">
+              <button type="submit" class="ctrl-btn sumar" title="Agregar uno">＋</button>
+            </form>
+
+            <!-- Eliminar ítem completo -->
+            <form method="POST"
+                  action="{{ url_for('editar_detalle', pedido_id=pedido_abierto.id, detalle_id=d.id) }}"
+                  onsubmit="return confirm('¿Eliminar {{ d.producto.nombre }} del pedido?')">
+              <input type="hidden" name="accion" value="eliminar">
+              <button type="submit" class="ctrl-btn eliminar" title="Eliminar ítem">🗑️</button>
+            </form>
+
           </div>
         </div>
       {% endfor %}
-      <div style="display:flex; justify-content:space-between; margin-top:10px; padding-top:8px; border-top:2px solid var(--line, #eee);">
+
+      <!-- Total acumulado -->
+      <div style="display:flex; justify-content:space-between; margin-top:10px;
+                  padding-top:8px; border-top:2px solid var(--line, #eee);">
         <div class="small"><b>Total actual</b></div>
         <div><b style="font-size:16px;">{{ ns.total|cop }}</b></div>
       </div>
@@ -97,7 +169,8 @@
         <div class="menu-card" style="margin-top:12px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <b>
-              {% if cat == "desayunos" %}🍳
+              {% if cat == "especialidad" %}⭐
+              {% elif cat == "desayunos" %}🍳
               {% elif cat == "almuerzos" %}🍛
               {% elif cat == "porciones" %}🍟
               {% elif cat == "bebidas calientes" %}☕

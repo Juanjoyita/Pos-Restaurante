@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Caja - {{ dia }}</title>
+  <title>Caja - {{ dia }} · Rancho27</title>
 
   <style>
     :root{
@@ -13,8 +13,6 @@
       --border: rgba(255,255,255,.12);
       --text:#e8eefc;
       --muted: rgba(232,238,252,.7);
-
-      /* 🔥 fuego / asados */
       --ember: rgba(249,115,22,.12);
       --emberB: rgba(249,115,22,.35);
       --red: rgba(239,68,68,.12);
@@ -23,7 +21,6 @@
       --greenB: rgba(34,197,94,.30);
       --blue: rgba(59,130,246,.10);
       --blueB: rgba(59,130,246,.30);
-
       --shadow: rgba(0,0,0,.45);
       --radius: 16px;
     }
@@ -31,265 +28,239 @@
     *{ box-sizing:border-box; }
     body{
       margin:0;
-      font-family: Arial, sans-serif;
-      padding: 16px;
-      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      padding:16px;
+      color:var(--text);
       background:
         radial-gradient(900px 520px at 15% 10%, rgba(249,115,22,.18), transparent 55%),
         radial-gradient(900px 520px at 85% 10%, rgba(239,68,68,.14), transparent 55%),
         radial-gradient(900px 520px at 50% 95%, rgba(245,158,11,.10), transparent 55%),
         var(--bg);
+      min-height:100vh;
     }
 
-    a{ color: var(--text); text-decoration:none; }
+    a{ color:var(--text); text-decoration:none; }
     h1,h2,h3{ margin:0; }
-    .wrap{ width:min(1100px, 100%); margin:0 auto; }
+    .wrap{ width:min(1100px,100%); margin:0 auto; }
 
     /* Topbar */
     .topbar{
-      display:flex;
-      gap:12px;
-      align-items:center;
-      justify-content:space-between;
-      flex-wrap:wrap;
-      margin-bottom: 14px;
+      display:flex; gap:12px; align-items:center;
+      justify-content:space-between; flex-wrap:wrap; margin-bottom:14px;
     }
-    .title{
-      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
-    }
+    .title{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     .badge{
-      display:inline-flex;
-      gap:8px;
-      align-items:center;
-      padding: 7px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(249,115,22,.35);
-      background: rgba(249,115,22,.12);
-      font-weight: 900;
-      font-size: 12px;
-      letter-spacing:.2px;
-      color: var(--text);
+      display:inline-flex; gap:8px; align-items:center;
+      padding:7px 10px; border-radius:999px;
+      border:1px solid rgba(249,115,22,.35);
+      background:rgba(249,115,22,.12);
+      font-weight:900; font-size:12px; letter-spacing:.2px; color:var(--text);
     }
+    .muted{ color:var(--muted); font-size:12px; font-weight:800; }
 
     /* Buttons */
     .btnrow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      padding:10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      cursor:pointer;
-      font-weight: 900;
-      transition: transform .06s ease, filter .15s ease, border-color .15s ease;
-      user-select:none;
-      white-space:nowrap;
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:8px; padding:10px 12px; border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--text); cursor:pointer; font-weight:900;
+      transition:transform .06s ease, filter .15s ease;
+      user-select:none; white-space:nowrap;
     }
-    .btn:hover{ transform: translateY(-1px); filter: brightness(1.06); }
-    .btn:active{ transform: translateY(0px); }
-
-    .btn.blue{ border-color: var(--blueB); background: var(--blue); }
-    .btn.ember{ border-color: var(--emberB); background: var(--ember); }
-    .btn.red{ border-color: var(--redB); background: var(--red); }
+    .btn:hover{ transform:translateY(-1px); filter:brightness(1.06); }
+    .btn:active{ transform:translateY(0); }
+    .btn.blue { border-color:var(--blueB);  background:var(--blue);  }
+    .btn.ember{ border-color:var(--emberB); background:var(--ember); }
+    .btn.red  { border-color:var(--redB);   background:var(--red);   }
 
     /* Cards */
     .card{
-      border: 1px solid var(--border);
-      background: linear-gradient(180deg, var(--card2), var(--card));
-      border-radius: var(--radius);
-      padding: 14px;
-      box-shadow: 0 22px 60px var(--shadow);
-      margin: 12px 0;
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, var(--card2), var(--card));
+      border-radius:var(--radius);
+      padding:14px;
+      box-shadow:0 22px 60px var(--shadow);
+      margin:12px 0;
     }
 
-    /* Summary grid */
+    /* Stats grid */
     .grid{
       display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
+      grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+      gap:12px;
     }
     .stat{
       border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
-      border-radius: 14px;
-      padding: 12px;
-      position:relative;
-      overflow:hidden;
+      background:rgba(255,255,255,.03);
+      border-radius:14px;
+      padding:14px;
+      position:relative; overflow:hidden;
+      transition:border-color .2s, box-shadow .2s;
     }
-    .stat::after{
-      content:"";
-      position:absolute;
-      inset:-40% -40% auto auto;
-      width:220px;
-      height:220px;
-      background: radial-gradient(circle, rgba(249,115,22,.18), transparent 60%);
+    .stat:hover{ border-color:rgba(255,255,255,.2); box-shadow:0 8px 30px rgba(0,0,0,.3); }
+    .stat::before{
+      content:""; position:absolute;
+      inset:-50px -50px auto auto;
+      width:160px; height:160px; border-radius:50%;
+      background:radial-gradient(circle, rgba(249,115,22,.18), transparent 60%);
       pointer-events:none;
-      transform: rotate(12deg);
     }
-    .muted{ color: var(--muted); font-size: 12px; font-weight:800; }
-    .metric{ font-size: 24px; font-weight: 900; margin-top: 4px; letter-spacing:.2px; }
-    .mini{ font-size:12px; color:rgba(232,238,252,.72); font-weight:800; margin-top:6px; }
+    .stat-icon{ font-size:20px; line-height:1; margin-bottom:8px; }
+    .stat-label{ font-size:12px; font-weight:800; color:var(--muted); }
+    .metric{ font-size:26px; font-weight:900; margin-top:4px; letter-spacing:.2px; line-height:1.1; }
+    .stat-sub{ font-size:12px; color:var(--muted); font-weight:800; margin-top:6px; }
 
-    /* Pills */
+    /* Pill */
     .pill{
-      display:inline-block;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 12px;
+      display:inline-flex; align-items:center; gap:6px;
+      padding:4px 10px; border-radius:999px; font-size:12px;
       border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.04);
-      color: rgba(232,238,252,.85);
-      font-weight: 900;
+      background:rgba(255,255,255,.04);
+      color:rgba(232,238,252,.85); font-weight:900;
     }
 
     /* Forms */
     .formRow{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:end;
-      justify-content:space-between;
+      display:flex; gap:10px; flex-wrap:wrap;
+      align-items:flex-end; justify-content:space-between;
     }
-    .controls{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:end;
-    }
-    .control{
-      display:grid;
-      gap:6px;
-      min-width: 170px;
-    }
-    select, input[type="date"], input[type="text"]{
-      padding:10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      outline:none;
-      font-weight: 900;
+    .controls{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
+    .control{ display:grid; gap:6px; min-width:170px; }
+
+    select, input[type="text"]{
+      padding:10px 12px; border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--text); outline:none; font-weight:900;
+      font-family:inherit;
     }
     select option{ color:#111; }
-    .search{
-      min-width: 240px;
+
+    .note{
+      margin-top:12px; padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(249,115,22,.22);
+      background:rgba(249,115,22,.07);
+      color:rgba(232,238,252,.88);
+      font-weight:800; font-size:12px;
+      display:flex; gap:8px; align-items:flex-start;
     }
 
-    /* Table */
-    .tableWrap{
-      overflow:auto;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.12);
-      margin-top:10px;
-    }
-    table{
-      width:100%;
-      border-collapse: collapse;
-      min-width: 720px;
-    }
-    th, td{
-      padding: 10px 10px;
-      border-bottom: 1px solid rgba(255,255,255,.10);
-      text-align:left;
-      font-size: 13px;
-      vertical-align: middle;
-    }
-    th{
-      background: rgba(255,255,255,.06);
-      font-weight: 900;
-      color: rgba(232,238,252,.92);
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
-    tr:hover td{ background: rgba(255,255,255,.03); }
-    .right{ text-align:right; }
-
-    /* Metodo cards */
+    /* Métodos de pago */
     .methodGrid{
       display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
-      margin-top: 10px;
+      grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));
+      gap:12px; margin-top:12px;
     }
     .method{
       border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
-      border-radius: 14px;
-      padding: 12px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
+      background:rgba(255,255,255,.03);
+      border-radius:14px; padding:14px;
+      display:flex; align-items:center;
+      justify-content:space-between; gap:12px;
+      transition:border-color .2s;
     }
+    .method:hover{ border-color:rgba(255,255,255,.2); }
     .method .icon{
-      width:38px; height:38px; border-radius: 12px;
+      width:40px; height:40px; border-radius:12px;
       display:grid; place-items:center;
       border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.05);
-      font-size: 18px;
+      background:rgba(255,255,255,.05);
+      font-size:18px; flex-shrink:0;
     }
-    .method .val{
-      font-weight: 900;
-      font-size: 18px;
-      text-align:right;
-      white-space:nowrap;
+    .method .info{ flex:1; }
+    .method .val{ font-weight:900; font-size:18px; text-align:right; white-space:nowrap; }
+    .method-name{ font-weight:900; font-size:14px; }
+    .method-sub{ font-size:11px; color:var(--muted); font-weight:800; margin-top:2px; }
+
+    /* Tablas */
+    .tableWrap{
+      overflow:auto; border-radius:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.12); margin-top:10px;
     }
+    table{ width:100%; border-collapse:collapse; min-width:620px; }
+    th, td{
+      padding:10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+      text-align:left; font-size:13px; vertical-align:middle;
+    }
+    th{
+      background:rgba(255,255,255,.06);
+      font-weight:900; color:rgba(232,238,252,.92);
+      position:sticky; top:0; z-index:1;
+    }
+    tr:last-child td{ border-bottom:none; }
+    tr:hover td{ background:rgba(255,255,255,.03); }
+    .right{ text-align:right; }
+
+    /* Rank badge */
+    .rank{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:24px; height:24px; border-radius:8px;
+      font-size:11px; font-weight:900;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+    }
+    .rank.gold  { border-color:rgba(245,158,11,.5); background:rgba(245,158,11,.15); color:rgba(245,158,11,.95); }
+    .rank.silver{ border-color:rgba(148,163,184,.4); background:rgba(148,163,184,.10); }
+    .rank.bronze{ border-color:rgba(180,120,80,.4); background:rgba(180,120,80,.10); }
 
     .sectionHead{
-      display:flex; justify-content:space-between; align-items:end; gap:10px; flex-wrap:wrap;
+      display:flex; justify-content:space-between;
+      align-items:flex-end; gap:10px; flex-wrap:wrap;
     }
 
-    .note{
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(249,115,22,.22);
-      background: rgba(249,115,22,.08);
-      color: rgba(232,238,252,.90);
-      font-weight: 800;
-      font-size: 12px;
+    /* Empty state */
+    .empty-state{
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      gap:12px; padding:40px 20px; text-align:center;
     }
+    .empty-icon{
+      font-size:44px; line-height:1;
+      filter:drop-shadow(0 0 20px rgba(249,115,22,.35));
+      animation:pulse-icon 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse-icon{
+      0%,100%{ transform:scale(1); opacity:1; }
+      50%     { transform:scale(1.08); opacity:.7; }
+    }
+    .empty-title{ font-size:15px; font-weight:900; }
+    .empty-sub{ font-size:12px; font-weight:800; color:var(--muted); max-width:260px; line-height:1.6; }
 
-    @media (max-width: 760px){
-      table{ min-width: 640px; }
-      .search{ min-width: 200px; }
+    @media (max-width:760px){
+      table{ min-width:560px; }
     }
   </style>
 </head>
-
 <body>
   <div class="wrap">
 
-    <!-- TOP -->
+    <!-- TOPBAR -->
     <div class="topbar">
       <div class="title">
         <h1>📊 Caja</h1>
         <span class="badge">🔥 Rancho27 · Reportes</span>
       </div>
-
       <div class="btnrow">
         <a class="btn" href="{{ url_for('admin_panel') }}">↩️ Volver</a>
         <a class="btn red" href="{{ url_for('logout') }}">🚪 Cerrar sesión</a>
       </div>
     </div>
 
-    <!-- Selector -->
+    <!-- SELECTOR DE FECHA -->
     <div class="card">
       <div class="formRow">
         <div>
-          <h2 style="font-size:16px; font-weight:900;">Caja del día</h2>
+          <h2 style="font-size:16px; font-weight:900;">Selecciona el día</h2>
           <div class="muted">Elige una fecha con pedidos cobrados</div>
         </div>
-
         <form method="GET" action="{{ url_for('caja_dia') }}" class="controls">
           <div class="control" style="min-width:220px;">
-            <div class="muted">Fecha</div>
+            <div class="muted">Fecha disponible</div>
             <select name="fecha">
               {% for f in fechas_disponibles %}
                 <option value="{{ f }}" {% if f == dia|string %}selected{% endif %}>{{ f }}</option>
@@ -299,34 +270,46 @@
           <button class="btn ember" type="submit">Ver 🔎</button>
         </form>
       </div>
-
       <div class="note">
-        Tip: Si quieres revisar un día específico, cambia la fecha y dale “Ver”. Los totales se actualizan al instante.
+        <span>💡</span>
+        <span>Solo aparecen fechas con pedidos cobrados. Cambia la fecha y pulsa "Ver" para actualizar los datos.</span>
       </div>
     </div>
 
-    <!-- RESUMEN -->
+    <!-- RESUMEN DEL DÍA -->
     <div class="card">
+      <div class="sectionHead" style="margin-bottom:12px;">
+        <div>
+          <h2 style="font-size:16px; font-weight:900;">📈 Resumen del día</h2>
+          <div class="muted">{{ dia }}</div>
+        </div>
+        <span class="pill">{{ conteo }} pedidos cobrados</span>
+      </div>
+
       <div class="grid">
         <div class="stat">
-          <div class="muted">Fecha</div>
-          <div class="metric">{{ dia }}</div>
-          <div class="mini">Cierre de caja del día</div>
+          <div class="stat-icon">📅</div>
+          <div class="stat-label">Fecha</div>
+          <div class="metric" style="font-size:18px;">{{ dia }}</div>
+          <div class="stat-sub">Cierre de caja</div>
         </div>
         <div class="stat">
-          <div class="muted">Total vendido</div>
+          <div class="stat-icon">💰</div>
+          <div class="stat-label">Total vendido</div>
           <div class="metric">{{ total_dia|cop }}</div>
-          <div class="mini">Ventas cobradas</div>
+          <div class="stat-sub">Ventas cobradas</div>
         </div>
         <div class="stat">
-          <div class="muted">Pedidos cobrados</div>
+          <div class="stat-icon">🧾</div>
+          <div class="stat-label">Pedidos cobrados</div>
           <div class="metric">{{ conteo }}</div>
-          <div class="mini">Cantidad de tickets</div>
+          <div class="stat-sub">Tickets del día</div>
         </div>
         <div class="stat">
-          <div class="muted">Ticket promedio</div>
+          <div class="stat-icon">📊</div>
+          <div class="stat-label">Ticket promedio</div>
           <div class="metric">{{ ticket_promedio|cop }}</div>
-          <div class="mini">Promedio por pedido</div>
+          <div class="stat-sub">Promedio por pedido</div>
         </div>
       </div>
     </div>
@@ -343,45 +326,34 @@
 
       <div class="methodGrid">
         <div class="method">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <div class="icon">💵</div>
-            <div>
-              <div style="font-weight:900;">Efectivo</div>
-              <div class="muted">Pagos en caja</div>
-            </div>
+          <div class="icon">💵</div>
+          <div class="info">
+            <div class="method-name">Efectivo</div>
+            <div class="method-sub">Pagos en caja</div>
           </div>
           <div class="val">{{ por_metodo["efectivo"]|cop }}</div>
         </div>
-
         <div class="method">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <div class="icon">🏦</div>
-            <div>
-              <div style="font-weight:900;">Transferencia</div>
-              <div class="muted">Nequi / Bancolombia</div>
-            </div>
+          <div class="icon">🏦</div>
+          <div class="info">
+            <div class="method-name">Transferencia</div>
+            <div class="method-sub">Nequi / Bancolombia</div>
           </div>
           <div class="val">{{ por_metodo["transferencia"]|cop }}</div>
         </div>
-
         <div class="method">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <div class="icon">💳</div>
-            <div>
-              <div style="font-weight:900;">Tarjeta</div>
-              <div class="muted">Datáfono</div>
-            </div>
+          <div class="icon">💳</div>
+          <div class="info">
+            <div class="method-name">Tarjeta</div>
+            <div class="method-sub">Datáfono</div>
           </div>
           <div class="val">{{ por_metodo["tarjeta"]|cop }}</div>
         </div>
-
         <div class="method">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <div class="icon">➕</div>
-            <div>
-              <div style="font-weight:900;">Otro</div>
-              <div class="muted">Casos especiales</div>
-            </div>
+          <div class="icon">➕</div>
+          <div class="info">
+            <div class="method-name">Otro</div>
+            <div class="method-sub">Casos especiales</div>
           </div>
           <div class="val">{{ por_metodo["otro"]|cop }}</div>
         </div>
@@ -395,18 +367,21 @@
           <h2 style="font-size:16px; font-weight:900;">🧾 Pedidos cobrados</h2>
           <div class="muted">Listado del día {{ dia }}</div>
         </div>
-
         <div class="controls">
-          <div class="control search">
+          <div class="control" style="min-width:200px;">
             <div class="muted">Buscar</div>
-            <input id="qPedidos" type="text" placeholder="Ej: mesa 3, tarjeta, #12">
+            <input id="qPedidos" type="text" placeholder="Mesa, método, #ID…">
           </div>
           <span class="pill" id="countPedidos">{{ conteo }} pedidos</span>
         </div>
       </div>
 
       {% if pedidos_info|length == 0 %}
-        <div class="muted" style="margin-top:10px;">No hay pedidos cobrados en esta fecha.</div>
+        <div class="empty-state">
+          <div class="empty-icon">🧾</div>
+          <p class="empty-title">Sin pedidos cobrados</p>
+          <p class="empty-sub">No hay pedidos registrados para esta fecha.</p>
+        </div>
       {% else %}
         <div class="tableWrap">
           <table id="tablaPedidos">
@@ -426,7 +401,13 @@
                 <td><b>#{{ p.id }}</b></td>
                 <td><span class="pill">Mesa {{ p.mesa }}</span></td>
                 <td>{{ p.hora }}</td>
-                <td>{{ p.metodo }}</td>
+                <td>
+                  {% if p.metodo == "efectivo" %}💵
+                  {% elif p.metodo == "transferencia" %}🏦
+                  {% elif p.metodo == "tarjeta" %}💳
+                  {% else %}➕{% endif %}
+                  {{ p.metodo }}
+                </td>
                 <td class="right"><b>{{ p.total|cop }}</b></td>
                 <td class="right">
                   <a class="btn blue" href="{{ url_for('ver_factura', pedido_id=p.id) }}">🧾 Ver</a>
@@ -444,25 +425,29 @@
       <div class="sectionHead">
         <div>
           <h2 style="font-size:16px; font-weight:900;">🔥 Top productos</h2>
-          <div class="muted">Ranking por ventas</div>
+          <div class="muted">Ranking por ventas del día</div>
         </div>
-
         <div class="controls">
-          <div class="control search">
+          <div class="control" style="min-width:200px;">
             <div class="muted">Buscar</div>
-            <input id="qTop" type="text" placeholder="Ej: churrasco, costilla...">
+            <input id="qTop" type="text" placeholder="Ej: bandeja, tinto…">
           </div>
-          <span class="pill" id="countTop">Top 10</span>
+          <span class="pill" id="countTop">Top {{ top_lista|length }}</span>
         </div>
       </div>
 
       {% if top_lista|length == 0 %}
-        <div class="muted" style="margin-top:10px;">No hay productos (aún).</div>
+        <div class="empty-state">
+          <div class="empty-icon">🍽️</div>
+          <p class="empty-title">Sin productos registrados</p>
+          <p class="empty-sub">Los productos más vendidos del día aparecerán aquí.</p>
+        </div>
       {% else %}
         <div class="tableWrap">
           <table id="tablaTop">
             <thead>
               <tr>
+                <th>#</th>
                 <th>Producto</th>
                 <th class="right">Cantidad</th>
                 <th class="right">Ventas</th>
@@ -471,6 +456,14 @@
             <tbody>
               {% for t in top_lista %}
               <tr>
+                <td>
+                  <span class="rank
+                    {% if loop.index == 1 %}gold
+                    {% elif loop.index == 2 %}silver
+                    {% elif loop.index == 3 %}bronze{% endif %}">
+                    {{ loop.index }}
+                  </span>
+                </td>
                 <td><b>{{ t.nombre }}</b></td>
                 <td class="right">{{ t.cantidad }}</td>
                 <td class="right"><b>{{ t.ventas|cop }}</b></td>
@@ -486,39 +479,30 @@
 
   <script>
     function attachSearch(inputId, tableId, counterId, baseText){
-      const input = document.getElementById(inputId);
-      const table = document.getElementById(tableId);
+      const input   = document.getElementById(inputId);
+      const table   = document.getElementById(tableId);
       const counter = document.getElementById(counterId);
       if(!input || !table) return;
 
-      const rows = Array.from(table.querySelectorAll("tbody tr"));
+      const rows  = Array.from(table.querySelectorAll("tbody tr"));
       const total = rows.length;
 
       function update(){
         const q = (input.value || "").toLowerCase().trim();
         let shown = 0;
-
         rows.forEach(r => {
-          const txt = r.innerText.toLowerCase();
-          const ok = txt.includes(q);
+          const ok = r.innerText.toLowerCase().includes(q);
           r.style.display = ok ? "" : "none";
           if(ok) shown++;
         });
-
-        if(counter){
-          counter.textContent = q
-            ? `Mostrando ${shown} de ${total}`
-            : baseText;
-        }
+        if(counter) counter.textContent = q ? `${shown} de ${total}` : baseText;
       }
 
       input.addEventListener("input", update);
-      update();
     }
 
     attachSearch("qPedidos", "tablaPedidos", "countPedidos", "{{ conteo }} pedidos");
-    attachSearch("qTop", "tablaTop", "countTop", "Top 10");
+    attachSearch("qTop",     "tablaTop",     "countTop",     "Top {{ top_lista|length }}");
   </script>
-
 </body>
 </html>

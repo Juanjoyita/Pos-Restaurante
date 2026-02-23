@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin - Panel</title>
+  <title>Admin - Panel · Rancho27</title>
 
   <style>
     :root{
@@ -13,8 +13,6 @@
       --border: rgba(255,255,255,.12);
       --text:#e8eefc;
       --muted: rgba(232,238,252,.7);
-
-      /* 🔥 Rancho27 / asados */
       --ember: rgba(249,115,22,.12);
       --emberB: rgba(249,115,22,.35);
       --blue: rgba(59,130,246,.10);
@@ -25,7 +23,6 @@
       --redB: rgba(239,68,68,.30);
       --warn: rgba(245,158,11,.12);
       --warnB: rgba(245,158,11,.35);
-
       --shadow: rgba(0,0,0,.45);
       --radius: 16px;
     }
@@ -40,166 +37,177 @@
         radial-gradient(900px 520px at 85% 10%, rgba(239,68,68,.14), transparent 55%),
         radial-gradient(900px 520px at 50% 95%, rgba(245,158,11,.10), transparent 55%),
         var(--bg);
+      min-height: 100vh;
       padding: 16px;
     }
 
     a{ color: var(--text); text-decoration:none; }
     h1,h2,h3{ margin:0; }
-
     .wrap{ width:min(1100px, 100%); margin:0 auto; }
 
     /* Topbar */
     .topbar{
-      display:flex;
-      gap:12px;
-      align-items:center;
-      justify-content:space-between;
-      flex-wrap:wrap;
-      margin-bottom: 14px;
+      display:flex; gap:12px; align-items:center;
+      justify-content:space-between; flex-wrap:wrap; margin-bottom:14px;
     }
-
-    .title{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-
+    .title{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
     .badge{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 7px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(249,115,22,.35);
-      background: rgba(249,115,22,.12);
-      font-weight: 900;
-      font-size: 12px;
-      letter-spacing:.2px;
-      color: var(--text);
+      display:inline-flex; align-items:center; gap:8px;
+      padding:7px 10px; border-radius:999px;
+      border:1px solid rgba(249,115,22,.35);
+      background:rgba(249,115,22,.12);
+      font-weight:900; font-size:12px; letter-spacing:.2px; color:var(--text);
     }
-
-    .muted{ color: var(--muted); font-size: 12px; font-weight:800; }
+    .muted{ color:var(--muted); font-size:12px; font-weight:800; }
 
     /* Buttons */
     .btnrow{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:8px;
-      padding:10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color: var(--text);
-      cursor:pointer;
-      font-weight: 900;
-      transition: transform .06s ease, filter .15s ease;
-      user-select:none;
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:8px; padding:10px 12px; border-radius:12px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--text); cursor:pointer; font-weight:900;
+      transition:transform .06s ease, filter .15s ease;
+      user-select:none; white-space:nowrap;
     }
-    .btn:hover{ transform: translateY(-1px); filter: brightness(1.06); }
-    .btn:active{ transform: translateY(0px); }
-
-    .btn.ember{ border-color: var(--emberB); background: var(--ember); }
-    .btn.blue{ border-color: var(--blueB); background: var(--blue); }
-    .btn.green{ border-color: var(--greenB); background: var(--green); }
-    .btn.red{ border-color: var(--redB); background: var(--red); }
-    .btn.warn{ border-color: var(--warnB); background: var(--warn); }
+    .btn:hover{ transform:translateY(-1px); filter:brightness(1.06); }
+    .btn:active{ transform:translateY(0); }
+    .btn.ember{ border-color:var(--emberB); background:var(--ember); }
+    .btn.blue { border-color:var(--blueB);  background:var(--blue);  }
+    .btn.green{ border-color:var(--greenB); background:var(--green); }
+    .btn.red  { border-color:var(--redB);   background:var(--red);   }
+    .btn.warn { border-color:var(--warnB);  background:var(--warn);  }
 
     /* Cards */
     .card{
-      border: 1px solid var(--border);
-      background: linear-gradient(180deg, var(--card2), var(--card));
-      border-radius: var(--radius);
-      padding: 14px;
-      box-shadow: 0 22px 60px var(--shadow);
-      margin: 12px 0;
+      border:1px solid var(--border);
+      background:linear-gradient(180deg, var(--card2), var(--card));
+      border-radius:var(--radius);
+      padding:14px;
+      box-shadow:0 22px 60px var(--shadow);
+      margin:12px 0;
     }
 
+    /* Stats grid */
     .grid{
       display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 12px;
+      grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+      gap:12px;
     }
 
     .stat{
       border:1px solid rgba(255,255,255,.10);
-      background: rgba(255,255,255,.04);
-      border-radius: 14px;
-      padding: 12px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
+      background:rgba(255,255,255,.03);
+      border-radius:14px;
+      padding:14px;
+      display:flex; flex-direction:column; gap:10px;
+      transition:border-color .2s, box-shadow .2s;
+      position:relative; overflow:hidden;
     }
+    .stat:hover{
+      border-color:rgba(255,255,255,.18);
+      box-shadow:0 8px 30px rgba(0,0,0,.3);
+    }
+    .stat.pedidos{ border-color:rgba(34,197,94,.2); }
+    .stat.pedidos:hover{ border-color:rgba(34,197,94,.4); }
+    .stat.productos{ border-color:rgba(59,130,246,.2); }
+    .stat.productos:hover{ border-color:rgba(59,130,246,.4); }
+    .stat.meseros{ border-color:rgba(245,158,11,.2); }
+    .stat.meseros:hover{ border-color:rgba(245,158,11,.4); }
+    .stat.caja{ border-color:rgba(249,115,22,.2); }
+    .stat.caja:hover{ border-color:rgba(249,115,22,.4); }
 
+    /* Glow de fondo sutil en cada stat */
+    .stat::before{
+      content:"";
+      position:absolute;
+      inset:-60px -60px auto auto;
+      width:160px; height:160px;
+      border-radius:50%;
+      pointer-events:none;
+      opacity:.35;
+    }
+    .stat.pedidos::before  { background:radial-gradient(circle, rgba(34,197,94,.25), transparent 60%); }
+    .stat.productos::before{ background:radial-gradient(circle, rgba(59,130,246,.25), transparent 60%); }
+    .stat.meseros::before  { background:radial-gradient(circle, rgba(245,158,11,.25), transparent 60%); }
+    .stat.caja::before     { background:radial-gradient(circle, rgba(249,115,22,.25), transparent 60%); }
+
+    .stat-icon{ font-size:22px; line-height:1; }
+    .stat-label{ font-size:12px; font-weight:800; color:var(--muted); }
     .metric{
-      font-size: 28px;
-      font-weight: 900;
-      letter-spacing:.2px;
-      line-height: 1;
+      font-size:32px; font-weight:900;
+      letter-spacing:.2px; line-height:1;
     }
+    .stat-sub{ font-size:12px; font-weight:800; color:var(--muted); }
 
+    /* Pill */
     .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 12px;
+      display:inline-flex; align-items:center; gap:8px;
+      padding:4px 10px; border-radius:999px; font-size:12px;
       border:1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.04);
-      color: rgba(232,238,252,.85);
-      font-weight: 900;
+      background:rgba(255,255,255,.04);
+      color:rgba(232,238,252,.85); font-weight:900;
+    }
+    .pill.online{
+      border-color:rgba(34,197,94,.3);
+      background:rgba(34,197,94,.08);
     }
 
-    hr{
-      border:none;
-      border-top:1px solid rgba(255,255,255,.12);
-      margin: 18px 0;
+    /* Online dot */
+    .dot-green{
+      width:8px; height:8px; border-radius:50%;
+      background:rgba(34,197,94,.9);
+      box-shadow:0 0 6px rgba(34,197,94,.6);
+      animation:blink 1.6s ease-in-out infinite;
+    }
+    @keyframes blink{
+      0%,100%{ opacity:1; }
+      50%     { opacity:.3; }
     }
 
-    /* List / table-like rows */
+    /* Pedidos cerrados list */
     .list{
       border:1px solid rgba(255,255,255,.10);
-      border-radius: 14px;
-      overflow:hidden;
-      background: rgba(0,0,0,.12);
+      border-radius:14px; overflow:hidden;
+      background:rgba(0,0,0,.12);
     }
-
-    .item{
-      padding: 12px 14px;
-      border-top:1px solid rgba(255,255,255,.10);
+    .list-item{
+      padding:12px 14px;
+      border-top:1px solid rgba(255,255,255,.08);
+      transition:background .15s;
     }
-    .item:first-child{ border-top:none; }
+    .list-item:first-child{ border-top:none; }
+    .list-item:hover{ background:rgba(255,255,255,.03); }
 
     .row{
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
+      display:flex; justify-content:space-between;
+      gap:10px; flex-wrap:wrap; align-items:center;
     }
+    .row .left{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .row .right{ color:var(--muted); font-size:12px; font-weight:800; }
 
-    .row .left{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
+    /* Empty state pedidos cerrados */
+    .empty-state{
+      display:flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      gap:12px; padding:40px 20px; text-align:center;
     }
+    .empty-icon{
+      font-size:40px; line-height:1;
+      filter:drop-shadow(0 0 18px rgba(249,115,22,.3));
+      animation:pulse-icon 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse-icon{
+      0%,100%{ transform:scale(1);    opacity:1;   }
+      50%     { transform:scale(1.07); opacity:.7; }
+    }
+    .empty-title{ font-size:15px; font-weight:900; color:var(--text); }
+    .empty-sub  { font-size:12px; font-weight:800; color:var(--muted); max-width:240px; line-height:1.6; }
 
-    .row .right{
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 800;
-    }
-
-    @media (max-width: 480px){
-      .metric{ font-size: 26px; }
-    }
+    @media (max-width:480px){ .metric{ font-size:28px; } }
   </style>
 </head>
-
 <body>
   <div class="wrap">
 
@@ -210,7 +218,6 @@
         <span class="badge">🔥 Rancho27 · Panel</span>
         <span class="muted">Bienvenido, <b style="color:rgba(232,238,252,.95)">{{ current_user.username }}</b></span>
       </div>
-
       <div class="btnrow">
         <a class="btn red" href="{{ url_for('logout') }}">🚪 Cerrar sesión</a>
       </div>
@@ -223,45 +230,53 @@
           <h2 style="font-size:16px; font-weight:900;">⚡ Accesos rápidos</h2>
           <div class="muted">Control de operación: pedidos, productos, usuarios y caja</div>
         </div>
-        <span class="pill">Estado: <span style="color:rgba(34,197,94,.95)">●</span> Online</span>
+        <span class="pill online">
+          <span class="dot-green"></span> Online
+        </span>
       </div>
 
-      <div class="grid" style="margin-top:12px;">
-        <div class="stat">
-          <div class="muted">🧾 Pedidos abiertos</div>
+      <div class="grid" style="margin-top:14px;">
+
+        <div class="stat pedidos">
+          <div class="stat-icon">🧾</div>
+          <div class="stat-label">Pedidos abiertos</div>
           <div class="metric">{{ pedidos_abiertos_count }}</div>
-          <div class="muted">Actualiza en tiempo real</div>
-          <div class="btnrow">
-            <a class="btn green" href="{{ url_for('admin_pedidos') }}">Ver pedidos</a>
+          <div class="stat-sub">Se actualiza en tiempo real</div>
+          <div class="btnrow" style="margin-top:4px;">
+            <a class="btn green" href="{{ url_for('admin_pedidos') }}">Ver pedidos →</a>
           </div>
         </div>
 
-        <div class="stat">
-          <div class="muted">📦 Productos activos</div>
+        <div class="stat productos">
+          <div class="stat-icon">📦</div>
+          <div class="stat-label">Productos activos</div>
           <div class="metric">{{ productos_activos_count }}</div>
-          <div class="muted">Total productos: <b style="color:rgba(232,238,252,.92)">{{ productos_total_count }}</b></div>
-          <div class="btnrow">
-            <a class="btn blue" href="{{ url_for('admin_productos') }}">Gestionar productos</a>
+          <div class="stat-sub">Total en sistema: <b style="color:rgba(232,238,252,.92)">{{ productos_total_count }}</b></div>
+          <div class="btnrow" style="margin-top:4px;">
+            <a class="btn blue" href="{{ url_for('admin_productos') }}">Gestionar →</a>
           </div>
         </div>
 
-        <div class="stat">
-          <div class="muted">👥 Meseros activos</div>
+        <div class="stat meseros">
+          <div class="stat-icon">👥</div>
+          <div class="stat-label">Meseros activos</div>
           <div class="metric">{{ meseros_activos_count }}</div>
-          <div class="muted">Crear / desactivar usuarios</div>
-          <div class="btnrow">
-            <a class="btn warn" href="{{ url_for('admin_usuarios') }}">Gestionar usuarios</a>
+          <div class="stat-sub">Crear / activar / desactivar</div>
+          <div class="btnrow" style="margin-top:4px;">
+            <a class="btn warn" href="{{ url_for('admin_usuarios') }}">Gestionar →</a>
           </div>
         </div>
 
-        <div class="stat">
-          <div class="muted">💰 Caja</div>
+        <div class="stat caja">
+          <div class="stat-icon">💰</div>
+          <div class="stat-label">Caja del día</div>
           <div class="metric">📊</div>
-          <div class="muted">Reportes por fechas</div>
-          <div class="btnrow">
-            <a class="btn ember" href="{{ url_for('caja_dia') }}">Abrir caja</a>
+          <div class="stat-sub">Reportes y ventas por fecha</div>
+          <div class="btnrow" style="margin-top:4px;">
+            <a class="btn ember" href="{{ url_for('caja_dia') }}">Abrir caja →</a>
           </div>
         </div>
+
       </div>
     </div>
 
@@ -272,27 +287,30 @@
           <h2 style="font-size:16px; font-weight:900;">🕘 Últimos pedidos cerrados</h2>
           <div class="muted">Acceso rápido a facturas recientes</div>
         </div>
-        <span class="pill">Historial</span>
+        <span class="pill">Historial · últimos 20</span>
       </div>
 
       <div style="margin-top:12px;">
         {% if pedidos_cerrados|length == 0 %}
-          <div class="muted">Aún no hay pedidos cerrados.</div>
+          <div class="empty-state">
+            <div class="empty-icon">🧾</div>
+            <p class="empty-title">Sin pedidos cerrados aún</p>
+            <p class="empty-sub">Cuando cierres o cobres un pedido aparecerá aquí.</p>
+          </div>
         {% else %}
           <div class="list">
             {% for p in pedidos_cerrados %}
-              <div class="item">
+              <div class="list-item">
                 <div class="row">
                   <div class="left">
                     <b>Pedido #{{ p.id }}</b>
                     <span class="pill">Mesa {{ p.mesa.numero }}</span>
-                    <span class="pill">Mesero {{ p.mesero.username }}</span>
+                    <span class="pill">{{ p.mesero.username }}</span>
                   </div>
                   <div class="right">
-                    {{ (p.fecha_cierre or p.fecha).strftime("%Y-%m-%d %H:%M") if (p.fecha_cierre or p.fecha) else "" }}
+                    {{ (p.fecha_cierre or p.fecha) | datetime_bogota if (p.fecha_cierre or p.fecha) else "" }}
                   </div>
                 </div>
-
                 <div class="btnrow" style="margin-top:10px;">
                   <a class="btn" href="{{ url_for('ver_factura', pedido_id=p.id) }}">🧾 Ver factura</a>
                 </div>
